@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace ConvAppServer
 {
@@ -28,10 +29,14 @@ namespace ConvAppServer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var dbAddr = Dns.GetHostAddresses("minuuoo.ddns.net")[0];
+            Console.WriteLine(dbAddr);
+
             services.AddDbContext<ProductContext>(o =>
-                o.UseSqlServer("server=tcp:localhost,1433;database=products;uid=admin;pwd=admin123"));
-            services.AddDbContext<PostContext>(o =>
-                o.UseSqlServer("server=tcp:localhost,1433;database=posts;uid=admin;pwd=admin123"));
+                o.UseSqlServer($"server={dbAddr},52022;database=products;uid=admin;pwd=admin123"));
+            
+            services.AddDbContext<PostingContext>(o =>
+                o.UseSqlServer($"server={dbAddr},52022;database=postings;uid=admin;pwd=admin123"));
             services.AddControllers();
         }
 
@@ -43,11 +48,11 @@ namespace ConvAppServer
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
