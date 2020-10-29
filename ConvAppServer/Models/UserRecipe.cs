@@ -12,7 +12,7 @@ namespace ConvAppServer.Models
 
         public byte[] createdate { get; set; }      // Timestamp
         public Guid createuser { get; set; }        // uniqueidentifier
-        public string textcontent { get; set; }         // ntext
-        public byte[] images { get; set; }    // varbinary
+        public string textcontent { get; set; }     // ntext
+        public byte[] images { get; set; }          // varbinary
     }
 }
