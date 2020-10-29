@@ -1,8 +1,8 @@
-# ÆíÀÇÁ¡´ŞÀÎ ¹é¿£µå REST API + ¹é¿öÄ¿ ¼­¹ö
-- ##»óÇ° CRUD
+# í¸ì˜ì ë‹¬ì¸ ë°±ì—”ë“œ REST API + ë°±ì›Œì»¤ ì„œë²„
+- ## ìƒí’ˆ CRUD
 	http://convappdev.azurewebsites.net/api/products
 	
-    - ### »óÇ° Ç°¸ñ ¸ğµ¨ `Product.cs`
+    - ### ìƒí’ˆ í’ˆëª© ëª¨ë¸ `Product.cs`
 	```c#
     class Product 
 
@@ -19,10 +19,10 @@
 
 ---
 
-- ##Æ÷½ºÆÃ - À¯Àú ·¹½ÃÇÇ CRUD
+- ## í¬ìŠ¤íŒ… - ìœ ì € ë ˆì‹œí”¼ CRUD
 	http://convappdev.azurewebsites.net/api/posting/userrecipes
 
-    - ###À¯Àú ·¹½ÃÇÇ ¸ğµ¨ `UserRecipe.cs`
+    - ### ìœ ì € ë ˆì‹œí”¼ ëª¨ë¸ `UserRecipe.cs`
 
     ```c#
     class UserRecipe
@@ -35,10 +35,11 @@
     public string textcontent { get; set; }     // ntext
     public byte[] images { get; set; }          // varbinary
     ```
-    - ###ÆäÀÌÁö³×ÀÌ¼Ç Áö¿ø
-    |url|¼³¸í|¸®ÅÏ°ª|
-    |---|---|---|
-    |`/page`|ÀüÃ¼ ÆäÀÌÁö ¼ö|int| 
-    |`/page/{ÆäÀÌÁö ¹øÈ£}`|ÀÔ·Â¹ŞÀº ÆäÀÌÁö¿¡ ÇØ´çÇÏ´Â Æ÷½ºÆ® ¸ñ·Ï ¸®ÅÏ. ÆäÀÌÁö´Â 0ºÎÅÍ ½ÃÀÛ|List<UserRecipe>|
+    - ### í˜ì´ì§€ë„¤ì´ì…˜ ì§€ì›
+    
+    |url|ì„¤ëª…|ë¦¬í„´ê°’|
+    |:---:|---|:---:|
+    |`/page`|ì „ì²´ í˜ì´ì§€ ìˆ˜|`int`| 
+    |`/page/{í˜ì´ì§€ ë²ˆí˜¸}`|ì…ë ¥ë°›ì€ í˜ì´ì§€ì— í•´ë‹¹í•˜ëŠ” í¬ìŠ¤íŠ¸ ëª©ë¡ ë¦¬í„´. í˜ì´ì§€ëŠ” 0ë¶€í„° ì‹œì‘|`List<UserRecipe>`|
 
 ---
