@@ -1,14 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace ConvAppServer
 {
@@ -25,6 +17,7 @@ namespace ConvAppServer
                 {
                     webBuilder.ConfigureKestrel(serverOptions =>
                     {
+                        // Azure app service 기본 엔드포인트 포트는 8080
                         serverOptions.Listen(IPAddress.Any, 8080);
                     })
                     .UseStartup<Startup>();
