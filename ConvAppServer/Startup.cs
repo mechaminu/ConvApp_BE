@@ -1,14 +1,15 @@
-using ConvAppServer.Models;
+using System;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
-using System.Diagnostics;
-using System;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Azure;
+using Azure.Storage.Blobs;
+using Azure.Core.Extensions;
+using ConvAppServer.Models;
 
 namespace ConvAppServer
 {
@@ -30,6 +31,10 @@ namespace ConvAppServer
                 o.UseSqlServer(Configuration.GetConnectionString("PostingsDBConnectionString")));
 
             services.AddControllers();
+            services.AddAzureClients(builder =>
+            {
+                builder.AddBlobServiceClient(Configuration["ConnectionStrings:BlobStorageConnectionString:blob"], preferMsi: true);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -43,6 +48,20 @@ namespace ConvAppServer
             {
                 endpoints.MapControllers();
             });
+        }
+    }
+    internal static class StartupExtensions
+    {
+        public static IAzureClientBuilder<BlobServiceClient, BlobClientOptions> AddBlobServiceClient(this AzureClientFactoryBuilder builder, string serviceUriOrConnectionString, bool preferMsi)
+        {
+            if (preferMsi && Uri.TryCreate(serviceUriOrConnectionString, UriKind.Absolute, out Uri serviceUri))
+            {
+                return builder.AddBlobServiceClient(serviceUri);
+            }
+            else
+            {
+                return builder.AddBlobServiceClient(serviceUriOrConnectionString);
+            }
         }
     }
 }

@@ -15,14 +15,13 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using System.Runtime.Loader;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 namespace ConvAppServer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ImagesController : ControllerBase
     {
-        public static string StorageDirectory = @"D:\Dev_D\convappimages";
+        public static string StorageDirectory = Path.Combine(Environment.CurrentDirectory,"convappimages");
         private readonly ILogger _logger;
 
         public ImagesController(ILogger<ImagesController> logger)
@@ -31,8 +30,6 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpGet("{filename}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetImage(string filename)
         {
             _logger.LogInformation($"recived GET request for filename {filename}");
@@ -66,8 +63,6 @@ namespace ConvAppServer.Controllers
 
         [HttpPost]
         [Consumes("multipart/form-data")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<string>> PostImage()
         {
             // multipart/form-data 타입의 POST request 처리 -> 이미지 업로드

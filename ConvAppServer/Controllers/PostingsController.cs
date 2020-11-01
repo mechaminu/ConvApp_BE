@@ -9,6 +9,7 @@ using ConvAppServer.Models;
 using Newtonsoft.Json;
 using System.IO;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace ConvAppServer.Controllers
 {
@@ -116,25 +117,33 @@ namespace ConvAppServer.Controllers
         //    return CreatedAtAction("GetPosting", new { posting.id }, posting);
         //}
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> PostPosting(Posting posting)
+        public async Task<IActionResult> PostPosting()
         {
             _logger.LogInformation($"received POST request");
             try
             {
+                byte[] bytes;
+                using (var ms = new MemoryStream())
+                {
+                    using (var reqStream = Request.Body)
+                        await reqStream.CopyToAsync(ms);
+                    bytes = ms.ToArray();
+                }
+                var json = Encoding.UTF8.GetString(bytes);
+                var posting = JsonConvert.DeserializeObject<Posting>(json);
+
                 posting.create_date = DateTime.Now;
 
                 _context.Postings.Add(posting);
                 await _context.SaveChangesAsync();
+
+                return CreatedAtAction("GetPosting", new { posting.id }, posting);
             }
             catch (Exception e)
             {
-                BadRequest(e);
+                _logger.LogError(e.Message);
+                return BadRequest();
             }
-            
-            return new CreatedAtActionResult("GetPosting", "Postings", new { posting.id }, posting);
         }
 
         [HttpDelete("{id}")]
