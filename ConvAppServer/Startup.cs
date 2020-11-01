@@ -6,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Diagnostics;
+using System;
+using Microsoft.Extensions.Logging;
 
 namespace ConvAppServer
 {
@@ -20,13 +23,11 @@ namespace ConvAppServer
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // 데이터베이스는 이민우 개인 PC에서 접근중
-            // 현재 데이터베이스 : MS SQL 2019
-            var dbAddr = Dns.GetHostAddresses("minuuoo.ddns.net")[0];
+            // 데이터베이스 Azure SQL로 마이그레이션 완료
             services.AddDbContext<ProductContext>(o =>
-                o.UseSqlServer($"server={dbAddr},52022;database=products;uid=admin;pwd=admin123"));
+                o.UseSqlServer(Configuration.GetConnectionString("ProductsDBConnectionString")));
             services.AddDbContext<PostingContext>(o =>
-                o.UseSqlServer($"server={dbAddr},52022;database=postings;uid=admin;pwd=admin123"));
+                o.UseSqlServer(Configuration.GetConnectionString("PostingsDBConnectionString")));
 
             services.AddControllers();
         }

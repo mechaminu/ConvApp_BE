@@ -6,6 +6,6 @@ namespace ConvAppServer.Models
     {
         public PostingContext(DbContextOptions<PostingContext> options) : base(options) { }
 
-        public DbSet<UserRecipe> UserRecipes { get; set; }
+        public DbSet<Posting> Postings { get; set; }
     }
 }

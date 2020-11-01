@@ -1,6 +1,9 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Azure.Storage.Blobs;
+using Azure.Identity;
+using System.IO;
 
 namespace ConvAppServer
 {
@@ -13,14 +16,16 @@ namespace ConvAppServer
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
+                .ConfigureWebHost(webBuilder =>
                 {
-                    webBuilder.ConfigureKestrel(serverOptions =>
-                    {
-                        // Azure app service 기본 엔드포인트 포트는 8080
-                        serverOptions.Listen(IPAddress.Any, 8080);
-                    })
+                    webBuilder
+                    .UseKestrel()
+                    .UseUrls("http://*:8080")
+                    .UseContentRoot(Directory.GetCurrentDirectory())
+                    .UseIISIntegration()
                     .UseStartup<Startup>();
                 });
+
+
     }
 }
