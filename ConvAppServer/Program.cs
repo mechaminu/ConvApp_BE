@@ -34,7 +34,5 @@ namespace ConvAppServer
                     .UseIISIntegration()
                     .UseStartup<Startup>();
                 });
-
-
     }
 }
