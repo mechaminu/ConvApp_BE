@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ConvAppServer.Models
 {
-    public class UserAction
+    public class History
     {
     }
 }
