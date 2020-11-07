@@ -10,6 +10,7 @@ using Microsoft.Extensions.Azure;
 using Azure.Storage.Blobs;
 using Azure.Core.Extensions;
 using ConvAppServer.Models;
+using Azure.Storage.Queues;
 
 namespace ConvAppServer
 {
@@ -29,12 +30,10 @@ namespace ConvAppServer
                 o.UseSqlServer(Configuration.GetConnectionString("ProductsDBConnectionString")));
             services.AddDbContext<PostingContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("PostingsDBConnectionString")));
+            services.AddAzureClients(o => 
+                o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
 
             services.AddControllers();
-            services.AddAzureClients(builder =>
-            {
-                builder.AddBlobServiceClient(Configuration["ConnectionStrings:BlobStorageConnectionString:blob"], preferMsi: true);
-            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

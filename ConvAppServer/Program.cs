@@ -6,6 +6,9 @@ using Azure.Identity;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using System;
+using Microsoft.Azure.Services.AppAuthentication;
+using Azure.Core;
+using Microsoft.Azure.KeyVault;
 
 namespace ConvAppServer
 {
@@ -18,10 +21,10 @@ namespace ConvAppServer
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((context, config) =>
+                .ConfigureAppConfiguration(async (context, config) =>
                 {
-                var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
-                config.AddAzureKeyVault(
+                    var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
+                    config.AddAzureKeyVault(
                     keyVaultEndpoint,
                     new DefaultAzureCredential());
                 })

@@ -23,14 +23,14 @@ namespace ConvAppServer.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            return await _context.Product.ToListAsync();
         }
 
         // GET: api/Products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Product.FindAsync(id);
 
             if (product == null)
             {
@@ -78,7 +78,7 @@ namespace ConvAppServer.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
-            _context.Products.Add(product);
+            _context.Product.Add(product);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetProduct", new { id = product.Id }, product);
@@ -88,13 +88,13 @@ namespace ConvAppServer.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Product>> DeleteProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Product.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            _context.Products.Remove(product);
+            _context.Product.Remove(product);
             await _context.SaveChangesAsync();
 
             return product;
@@ -102,7 +102,7 @@ namespace ConvAppServer.Controllers
 
         private bool ProductExists(int id)
         {
-            return _context.Products.Any(e => e.Id == id);
+            return _context.Product.Any(e => e.Id == id);
         }
     }
 }

@@ -7,14 +7,13 @@ namespace ConvAppServer.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long id { get; set; }
-        public DateTime create_date { get; set; }
-        public DateTime modify_date { get; set; }
+        public bool is_recipe { get; set; }
         public long create_user_oid { get; set; }
 
-        public byte pst_type { get; set; }
+        public DateTime create_date { get; set; }
+        public DateTime modify_date { get; set; }
+        public DateTime delete_date { get; set; }
+
         public string title { get; set; }
-        public string text { get; set; }
-        public string images { get; set; }
-        public string products { get; set; }
     }
 }

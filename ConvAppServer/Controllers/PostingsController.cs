@@ -30,14 +30,14 @@ namespace ConvAppServer.Controllers
         public async Task<ActionResult<IEnumerable<Posting>>> GetPostings()
         {
             _logger.LogInformation($"received GET request for all postings");
-            return await _context.Postings.ToListAsync();
+            return await _context.Posting.ToListAsync();
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Posting>> GetPosting(long id)
         {
             _logger.LogInformation($"received GET request for {id}");
-            var posting = await _context.Postings.FindAsync(id);
+            var posting = await _context.Posting.FindAsync(id);
 
             if (posting == null)
             {
@@ -52,7 +52,7 @@ namespace ConvAppServer.Controllers
         [HttpGet("page")]
         public async Task<IActionResult> GetPostingTotalPage()
         {
-            var cntList = await _context.Postings.CountAsync();
+            var cntList = await _context.Posting.CountAsync();
             int itemsPerPage = 10;
             int totalPage = cntList / itemsPerPage;
 
@@ -63,7 +63,7 @@ namespace ConvAppServer.Controllers
         [HttpGet("page/{page}")]
         public async Task<IActionResult> GetPostingPage(int page)
         {
-            return Ok((await _context.Postings.ToListAsync()).Skip(page * 10).Take(10).ToList());
+            return Ok((await _context.Posting.ToListAsync()).Skip(page * 10).Take(10).ToList());
         }
         #endregion
 
@@ -134,7 +134,7 @@ namespace ConvAppServer.Controllers
 
                 posting.create_date = DateTime.Now;
 
-                _context.Postings.Add(posting);
+                _context.Posting.Add(posting);
                 await _context.SaveChangesAsync();
 
                 return CreatedAtAction("GetPosting", new { posting.id }, posting);
@@ -149,13 +149,13 @@ namespace ConvAppServer.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Posting>> DeletePosting(long id)
         {
-            var posting = await _context.Postings.FindAsync(id);
+            var posting = await _context.Posting.FindAsync(id);
             if (posting == null)
             {
                 return NotFound();
             }
 
-            _context.Postings.Remove(posting);
+            _context.Posting.Remove(posting);
             await _context.SaveChangesAsync();
 
             return posting;
@@ -163,7 +163,7 @@ namespace ConvAppServer.Controllers
 
         private bool PostingExists(long id)
         {
-            return _context.Postings.Any(e => e.id == id);
+            return _context.Posting.Any(e => e.id == id);
         }
     }
 }

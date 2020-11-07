@@ -14,6 +14,8 @@ using HeyRed.Mime;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using System.Runtime.Loader;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace ConvAppServer.Controllers
 {
@@ -23,42 +25,44 @@ namespace ConvAppServer.Controllers
     {
         public static string StorageDirectory = Path.Combine(Environment.CurrentDirectory,"convappimages");
         private readonly ILogger _logger;
+        public BlobContainerClient _blob;
 
-        public ImagesController(ILogger<ImagesController> logger)
+        public ImagesController(ILogger<ImagesController> logger, BlobServiceClient blob)
         {
             _logger = logger;
+            _blob = blob.GetBlobContainerClient("images");
         }
 
+
+
         [HttpGet("{filename}")]
-        public IActionResult GetImage(string filename)
+        public async Task<ActionResult> GetImage(string filename)
         {
             _logger.LogInformation($"recived GET request for filename {filename}");
 
-            var path = Path.Combine(StorageDirectory, string.Join("", filename.Take(2)),filename);
+            var blobClient = _blob.GetBlobClient(filename);
 
-            if (System.IO.File.Exists(path))
+            if (await blobClient.ExistsAsync())
             {
-                return Ok(new FileStream(path, FileMode.Open));
+                var ms = new MemoryStream();    // Performance impact?
+                await blobClient.DownloadToAsync(ms);
+                return Ok(ms);
             }
-
-            return NotFound();
+            else
+                return NotFound();
                 
         }
 
         [HttpDelete("{filename}")]
-        public IActionResult DeleteImage(string filename)
+        public async Task<ActionResult> DeleteImage(string filename)
         {
             _logger.LogInformation($"recived DELETE request for filename {filename}");
 
-            var path = Path.Combine(StorageDirectory, string.Join("", filename.Take(2)), filename);
-
-            if (System.IO.File.Exists(path))
-            {
-                System.IO.File.Delete(path);
+            if (await _blob.GetBlobClient(filename).DeleteIfExistsAsync())
                 return Ok();
-            }
+            else
+                return NotFound();
 
-            return NotFound();
         }
 
         [HttpPost]
@@ -67,7 +71,6 @@ namespace ConvAppServer.Controllers
         {
             // multipart/form-data 타입의 POST request 처리 -> 이미지 업로드
             // TODO 저장한 이미지의 파일명 리턴
-
             List<string> fileNameList = new List<string>();
             _logger.LogInformation("received POST request with multipart/form-data body");
             MultipartFormDataParser parser;
@@ -93,22 +96,18 @@ namespace ConvAppServer.Controllers
                 // 디렉토리는 파일명의 첫 2자리를 이름으로 갖는 폴더 안에 저장
                 string fileName = string.Empty;
                 string filePath = string.Empty;
-                bool dupe = true;   // 중복 검증 flag. 루프 진입을 위해 초기값 true
-                while (dupe)
+
+                BlobClient blobClient;
+                bool dupe = false;
+                do
                 {
                     fileName = GenerateFileName() + "." + MimeTypesMap.GetExtension(file.ContentType);
-                    filePath = Path.Combine(Directory.CreateDirectory(Path.Combine(StorageDirectory, string.Join("", fileName.ToCharArray().Take(2)))).FullName, fileName);
-                    dupe = System.IO.File.Exists(filePath);
-                }
+                    blobClient = _blob.GetBlobClient(fileName);
+                    dupe = await blobClient.ExistsAsync();
+                } while (dupe);
 
                 _logger.LogInformation($"image saved - {filePath}");
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await data.CopyToAsync(fileStream);
-                    fileStream.Close();
-                }
-
+                await blobClient.UploadAsync(data);
                 fileNameList.Add(fileName);
             }
 
