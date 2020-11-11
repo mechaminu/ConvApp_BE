@@ -8,6 +8,12 @@ using ConvAppServer.Models;
 
 namespace ConvAppServer.Controllers
 {
+    public class ProductContext : DbContext
+    {
+        public ProductContext(DbContextOptions<ProductContext> options) : base(options) { }
+        public DbSet<Product> Product { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsController : ControllerBase

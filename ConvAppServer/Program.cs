@@ -1,14 +1,9 @@
-using System.Net;
+using System;
+using System.IO;
+using Azure.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Azure.Storage.Blobs;
-using Azure.Identity;
-using System.IO;
 using Microsoft.Extensions.Configuration;
-using System;
-using Microsoft.Azure.Services.AppAuthentication;
-using Azure.Core;
-using Microsoft.Azure.KeyVault;
 
 namespace ConvAppServer
 {
@@ -21,12 +16,12 @@ namespace ConvAppServer
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(async (context, config) =>
+                .ConfigureAppConfiguration((context, config) =>
                 {
                     var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
                     config.AddAzureKeyVault(
                     keyVaultEndpoint,
-                    new DefaultAzureCredential());
+                    new DefaultAzureCredential(new DefaultAzureCredentialOptions { ExcludeSharedTokenCacheCredential = true }));
                 })
                 .ConfigureWebHost(webBuilder =>
                 {

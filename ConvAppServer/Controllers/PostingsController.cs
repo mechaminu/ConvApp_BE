@@ -1,18 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConvAppServer.Models;
-using Newtonsoft.Json;
-using System.IO;
 using Microsoft.Extensions.Logging;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using ConvAppServer.Models;
 
 namespace ConvAppServer.Controllers
 {
+    public class PostingContext : DbContext
+    {
+        public PostingContext(DbContextOptions<PostingContext> options) : base(options) { }
+
+        public DbSet<Posting> Posting { get; set; }
+        public DbSet<PostingNode> PostingNode { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class PostingsController : ControllerBase
@@ -47,36 +54,11 @@ namespace ConvAppServer.Controllers
             return posting;
         }
 
-        #region 페이지네이션 데이터 제공
-        // 페이지 총 갯수 리턴
-        [HttpGet("page")]
-        public async Task<IActionResult> GetPostingTotalPage()
-        {
-            var cntList = await _context.Posting.CountAsync();
-            int itemsPerPage = 10;
-            int totalPage = cntList / itemsPerPage;
-
-            return Ok(cntList % itemsPerPage != 0 ? totalPage + 1 : totalPage);
-        }
-
-        // 원하는 페이지에 해당하는 아이템 리스트 리턴
-        [HttpGet("page/{page}")]
-        public async Task<IActionResult> GetPostingPage(int page)
-        {
-            return Ok((await _context.Posting.ToListAsync()).Skip(page * 10).Take(10).ToList());
-        }
-        #endregion
-
-
-        #region 인피니트 스크롤 데이터 제공
-        // TODO
-        #endregion
-
         // PUT: api/UserRecipes/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPosting(long id, Posting posting)
+        public async Task<IActionResult> PutPosting(long id, PostingSet posting)
         {
             if (id != posting.id)
             {
@@ -108,14 +90,6 @@ namespace ConvAppServer.Controllers
         // POST: api/UserRecipes
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        //[HttpPost]
-        //public async Task<ActionResult<Posting>> PostUserRecipe(Posting posting)
-        //{
-        //    _context.Postings.Add(posting);
-        //    await _context.SaveChangesAsync();
-
-        //    return CreatedAtAction("GetPosting", new { posting.id }, posting);
-        //}
         [HttpPost]
         public async Task<IActionResult> PostPosting()
         {
@@ -130,14 +104,25 @@ namespace ConvAppServer.Controllers
                     bytes = ms.ToArray();
                 }
                 var json = Encoding.UTF8.GetString(bytes);
-                var posting = JsonConvert.DeserializeObject<Posting>(json);
+                var postingSet = JsonConvert.DeserializeObject<PostingSet>(json);
 
-                posting.create_date = DateTime.Now;
+                postingSet.create_date = DateTime.UtcNow;
 
-                _context.Posting.Add(posting);
+                byte order = 0;
+                foreach (var item in postingSet.PostingNodes)
+                    _context.PostingNode.Add(new PostingNode
+                    {
+                        parent_id = postingSet.id,
+                        order_number = order++,
+                        images = item.image,
+                        text = item.text
+                    });
+
+                _context.Posting.Add(postingSet);
+                
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction("GetPosting", new { posting.id }, posting);
+                return CreatedAtAction("GetPosting", new { postingSet.id }, postingSet);
             }
             catch (Exception e)
             {

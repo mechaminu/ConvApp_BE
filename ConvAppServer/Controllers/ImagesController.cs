@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System.Runtime.Loader;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Base62;
 
 namespace ConvAppServer.Controllers
 {
@@ -23,7 +24,7 @@ namespace ConvAppServer.Controllers
     [ApiController]
     public class ImagesController : ControllerBase
     {
-        public static string StorageDirectory = Path.Combine(Environment.CurrentDirectory,"convappimages");
+
         private readonly ILogger _logger;
         public BlobContainerClient _blob;
 
@@ -31,26 +32,6 @@ namespace ConvAppServer.Controllers
         {
             _logger = logger;
             _blob = blob.GetBlobContainerClient("images");
-        }
-
-
-
-        [HttpGet("{filename}")]
-        public async Task<ActionResult> GetImage(string filename)
-        {
-            _logger.LogInformation($"recived GET request for filename {filename}");
-
-            var blobClient = _blob.GetBlobClient(filename);
-
-            if (await blobClient.ExistsAsync())
-            {
-                var ms = new MemoryStream();    // Performance impact?
-                await blobClient.DownloadToAsync(ms);
-                return Ok(ms);
-            }
-            else
-                return NotFound();
-                
         }
 
         [HttpDelete("{filename}")]
@@ -62,7 +43,6 @@ namespace ConvAppServer.Controllers
                 return Ok();
             else
                 return NotFound();
-
         }
 
         [HttpPost]
@@ -94,43 +74,45 @@ namespace ConvAppServer.Controllers
 
                 // 파일명 12자리 숫자+소문자 문자열로 설정
                 // 디렉토리는 파일명의 첫 2자리를 이름으로 갖는 폴더 안에 저장
-                string fileName = string.Empty;
+                string fileName;
                 string filePath = string.Empty;
 
                 BlobClient blobClient;
-                bool dupe = false;
+                bool dupe;
                 do
                 {
-                    fileName = GenerateFileName() + "." + MimeTypesMap.GetExtension(file.ContentType);
+                    fileName = GenerateFileName();
                     blobClient = _blob.GetBlobClient(fileName);
                     dupe = await blobClient.ExistsAsync();
                 } while (dupe);
 
                 _logger.LogInformation($"image saved - {filePath}");
-                await blobClient.UploadAsync(data);
+                await blobClient.UploadAsync(data,new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType } });
                 fileNameList.Add(fileName);
             }
 
-            return string.Join(",",fileNameList.ToArray());
+            return string.Join(";",fileNameList.ToArray());
 
             // TODO 이미지 저장 후 관련 포스팅 항목의 images 컬럼 업데이트까지 진행하고 싶음
-
         }
 
-        // 12자리 랜덤파일이름 생성기
+        // 16자리 랜덤파일이름 생성기
         private static string GenerateFileName()
         {
-            var arr = "0123456789abcdefghijklmnopqrstuvwxyz".ToCharArray();
+            var t = BitConverter.GetBytes(DateTime.UtcNow.Ticks).ToBase62() + "_";
 
-            char[] res = new char[12];
+            var base62Chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+            var len = 15 - t.Length;
+
+            char[] res = new char[len];
             var random = new Random();
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < len; i++)
             {
-                int idx = random.Next(0, arr.Length - 1);
-                res[i] = arr[idx];
+                int idx = random.Next(0, base62Chars.Length - 1);
+                res[i] = base62Chars[idx];
             }
 
-            return string.Join("", res);
+            return t + string.Join("", res);
         }
     }
 }
