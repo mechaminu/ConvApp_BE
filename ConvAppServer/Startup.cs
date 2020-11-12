@@ -1,5 +1,4 @@
 using System;
-using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -7,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
 using Azure.Core.Extensions;
 using ConvAppServer.Models;
@@ -16,20 +16,21 @@ namespace ConvAppServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, ILogger<PostingsController> logger)
         {
             Configuration = configuration;
+            Logger = logger; 
         }
 
         public IConfiguration Configuration { get; }
+        public ILogger Logger { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // 데이터베이스 Azure SQL로 마이그레이션 완료
-            services.AddDbContext<ProductContext>(o =>
-                o.UseSqlServer(Configuration.GetConnectionString("ProductsDBConnectionString")));
-            services.AddDbContext<PostingContext>(o =>
-                o.UseSqlServer(Configuration.GetConnectionString("PostingsDBConnectionString")));
+            services.AddDbContext<SqlContext>(o =>
+                o.UseSqlServer(Configuration.GetConnectionString("SqlDBConnectionString"))
+                 .LogTo(new Action<string>(s => Logger.LogInformation(s)), LogLevel.Information));
             services.AddAzureClients(o => 
                 o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
 

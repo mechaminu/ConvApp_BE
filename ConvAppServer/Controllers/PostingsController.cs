@@ -12,22 +12,14 @@ using ConvAppServer.Models;
 
 namespace ConvAppServer.Controllers
 {
-    public class PostingContext : DbContext
-    {
-        public PostingContext(DbContextOptions<PostingContext> options) : base(options) { }
-
-        public DbSet<Posting> Posting { get; set; }
-        public DbSet<PostingNode> PostingNode { get; set; }
-    }
-
     [Route("api/[controller]")]
     [ApiController]
     public class PostingsController : ControllerBase
     {
-        private readonly PostingContext _context;
+        private readonly SqlContext _context;
         private readonly ILogger _logger;
 
-        public PostingsController(PostingContext context, ILogger<PostingsController> logger)
+        public PostingsController(SqlContext context, ILogger<PostingsController> logger)
         {
             _context = context;
             _logger = logger;
@@ -36,15 +28,15 @@ namespace ConvAppServer.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Posting>>> GetPostings()
         {
-            _logger.LogInformation($"received GET request for all postings");
-            return await _context.Posting.ToListAsync();
+            _logger.LogInformation("received GET request for all postings");
+            return await _context.Postings.ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Posting>> GetPosting(long id)
+        public async Task<ActionResult<Posting>> GetPosting(int id)
         {
             _logger.LogInformation($"received GET request for {id}");
-            var posting = await _context.Posting.FindAsync(id);
+            var posting = await _context.Postings.FindAsync(id);
 
             if (posting == null)
             {
@@ -52,39 +44,6 @@ namespace ConvAppServer.Controllers
             }
 
             return posting;
-        }
-
-        // PUT: api/UserRecipes/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPosting(long id, PostingSet posting)
-        {
-            if (id != posting.id)
-            {
-                return BadRequest();
-            }
-
-            posting.modify_date = DateTime.Now;
-            _context.Entry(posting).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PostingExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // POST: api/UserRecipes
@@ -104,25 +63,15 @@ namespace ConvAppServer.Controllers
                     bytes = ms.ToArray();
                 }
                 var json = Encoding.UTF8.GetString(bytes);
-                var postingSet = JsonConvert.DeserializeObject<PostingSet>(json);
+                var posting = JsonConvert.DeserializeObject<Posting>(json);
 
-                postingSet.create_date = DateTime.UtcNow;
+                posting.Created = DateTime.UtcNow;
 
-                byte order = 0;
-                foreach (var item in postingSet.PostingNodes)
-                    _context.PostingNode.Add(new PostingNode
-                    {
-                        parent_id = postingSet.id,
-                        order_number = order++,
-                        images = item.image,
-                        text = item.text
-                    });
-
-                _context.Posting.Add(postingSet);
+                _context.Postings.Add(posting);
                 
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction("GetPosting", new { postingSet.id }, postingSet);
+                return CreatedAtAction("GetPosting", new { posting.Id }, posting);
             }
             catch (Exception e)
             {
@@ -132,23 +81,23 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Posting>> DeletePosting(long id)
+        public async Task<ActionResult<Posting>> DeletePosting(int id)
         {
-            var posting = await _context.Posting.FindAsync(id);
+            var posting = await _context.Postings.FindAsync(id);
             if (posting == null)
             {
                 return NotFound();
             }
 
-            _context.Posting.Remove(posting);
+            _context.Postings.Remove(posting);
             await _context.SaveChangesAsync();
 
             return posting;
         }
 
-        private bool PostingExists(long id)
+        private bool PostingExists(int id)
         {
-            return _context.Posting.Any(e => e.id == id);
+            return _context.Postings.Any(e => e.Id == id);
         }
     }
 }
