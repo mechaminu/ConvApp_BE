@@ -1,17 +1,5 @@
 {
   "dependencies": {
-    "mssql1": {
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/paloaltoinfo/databases/postings",
-      "type": "mssql.azure",
-      "connectionId": "PostingsDBConnectionString",
-      "secretStore": "AzureKeyVault"
-    },
-    "mssql2": {
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/paloaltoinfo/databases/products",
-      "type": "mssql.azure",
-      "connectionId": "ProductsDBConnectionString",
-      "secretStore": "AzureKeyVault"
-    },
     "secrets1": {
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.KeyVault/vaults/ConvAppServervault",
       "type": "secrets.keyVault",

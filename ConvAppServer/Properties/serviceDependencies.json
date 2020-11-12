@@ -1,13 +1,5 @@
 {
   "dependencies": {
-    "mssql1": {
-      "type": "mssql",
-      "connectionId": "PostingsDBConnectionString"
-    },
-    "mssql2": {
-      "type": "mssql",
-      "connectionId": "ProductsDBConnectionString"
-    },
     "secrets1": {
       "type": "secrets",
       "connectionId": "VaultUri"

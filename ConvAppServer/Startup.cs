@@ -16,10 +16,9 @@ namespace ConvAppServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, ILogger<PostingsController> logger)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            Logger = logger; 
         }
 
         public IConfiguration Configuration { get; }
@@ -29,8 +28,7 @@ namespace ConvAppServer
         {
             // 데이터베이스 Azure SQL로 마이그레이션 완료
             services.AddDbContext<SqlContext>(o =>
-                o.UseSqlServer(Configuration.GetConnectionString("SqlDBConnectionString"))
-                 .LogTo(new Action<string>(s => Logger.LogInformation(s)), LogLevel.Information));
+                o.UseSqlServer(Configuration.GetConnectionString("SqlDBConnectionString")));
             services.AddAzureClients(o => 
                 o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
 

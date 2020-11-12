@@ -26,10 +26,19 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings()
+        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings(
+            [FromQuery(Name = "start")] int start,
+            [FromQuery(Name = "end")] int end,
+            [FromQuery(Name = "isRecipe")] bool isRecipe)
         {
-            _logger.LogInformation("received GET request for all postings");
-            return await _context.Postings.ToListAsync();
+            _logger.LogInformation("received GET request for postings");
+
+            var query = _context.Postings
+                .Where(p => p.IsRecipe == isRecipe)
+                .Skip(start - 1).Take(end)
+                .Include(p => p.PostingNodes);
+
+            return await query.ToListAsync();
         }
 
         [HttpGet("{id}")]
@@ -66,6 +75,11 @@ namespace ConvAppServer.Controllers
                 var posting = JsonConvert.DeserializeObject<Posting>(json);
 
                 posting.Created = DateTime.UtcNow;
+
+                foreach (var node in posting.PostingNodes)
+                {
+                    node.OrderIndex = (byte)posting.PostingNodes.IndexOf(node);
+                }
 
                 _context.Postings.Add(posting);
                 
