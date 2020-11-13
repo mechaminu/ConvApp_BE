@@ -25,26 +25,11 @@ namespace ConvAppServer.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings(
-            [FromQuery(Name = "start")] int start,
-            [FromQuery(Name = "end")] int end,
-            [FromQuery(Name = "isRecipe")] bool isRecipe)
-        {
-            _logger.LogInformation("received GET request for postings");
-
-            var query = _context.Postings
-                .Where(p => p.IsRecipe == isRecipe)
-                .Skip(start - 1).Take(end)
-                .Include(p => p.PostingNodes);
-
-            return await query.ToListAsync();
-        }
-
         [HttpGet("{id}")]
         public async Task<ActionResult<Posting>> GetPosting(int id)
         {
-            _logger.LogInformation($"received GET request for {id}");
+            _logger.LogInformation($"received GET request for postings");
+
             var posting = await _context.Postings.FindAsync(id);
 
             if (posting == null)
@@ -53,6 +38,38 @@ namespace ConvAppServer.Controllers
             }
 
             return posting;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings(
+            [FromQuery(Name = "start")] int start = 0,
+            [FromQuery(Name = "end")] int end = 20,
+            [FromQuery(Name = "isRecipe")] bool? isRecipe = false)
+        {
+            _logger.LogInformation($"received GET request for postings\n\twith Querystring - start{start} end{end} isRecipe{isRecipe}");
+
+            var query = _context.Postings
+                .Where(p => p.IsRecipe == isRecipe)
+                .OrderBy(p => p.Created)
+                .Skip(start).Take(end)
+                .Include(p => p.PostingNodes);
+
+            return await query.ToListAsync();
+        }
+
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<Posting>>> GetPostingsAll(
+            [FromQuery(Name = "start")] int start = 0,
+            [FromQuery(Name = "end")] int end = 20)
+        {
+            _logger.LogInformation($"received GET request for all postings\n\twith Querystring - start{start} end{end}");
+
+            var query = _context.Postings
+                .OrderBy(p => p.Created)
+                .Skip(start).Take(end)
+                .Include(p => p.PostingNodes);
+
+            return await query.ToListAsync();
         }
 
         // POST: api/UserRecipes
@@ -92,26 +109,6 @@ namespace ConvAppServer.Controllers
                 _logger.LogError(e.Message);
                 return BadRequest();
             }
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<Posting>> DeletePosting(int id)
-        {
-            var posting = await _context.Postings.FindAsync(id);
-            if (posting == null)
-            {
-                return NotFound();
-            }
-
-            _context.Postings.Remove(posting);
-            await _context.SaveChangesAsync();
-
-            return posting;
-        }
-
-        private bool PostingExists(int id)
-        {
-            return _context.Postings.Any(e => e.Id == id);
         }
     }
 }

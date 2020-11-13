@@ -4,14 +4,16 @@ using ConvAppServer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ConvAppServer.Migrations
 {
     [DbContext(typeof(SqlContext))]
-    partial class SqlContextModelSnapshot : ModelSnapshot
+    [Migration("20201113063742_nope")]
+    partial class nope
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,15 +32,10 @@ namespace ConvAppServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsRecipe")
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
 
                     b.ToTable("Postings");
                 });
@@ -89,40 +86,6 @@ namespace ConvAppServer.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("ConvAppServer.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProfileImage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ConvAppServer.Models.UserAuth", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PwdDigest")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("UserAuth");
-                });
-
             modelBuilder.Entity("PostingProduct", b =>
                 {
                     b.Property<int>("PostingsId")
@@ -138,15 +101,6 @@ namespace ConvAppServer.Migrations
                     b.ToTable("PostingProduct");
                 });
 
-            modelBuilder.Entity("ConvAppServer.Models.Posting", b =>
-                {
-                    b.HasOne("ConvAppServer.Models.User", null)
-                        .WithMany("CreatedPostings")
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ConvAppServer.Models.PostingNode", b =>
                 {
                     b.HasOne("ConvAppServer.Models.Posting", null)
@@ -154,17 +108,6 @@ namespace ConvAppServer.Migrations
                         .HasForeignKey("PostingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("ConvAppServer.Models.UserAuth", b =>
-                {
-                    b.HasOne("ConvAppServer.Models.User", "User")
-                        .WithOne()
-                        .HasForeignKey("ConvAppServer.Models.UserAuth", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PostingProduct", b =>
@@ -185,11 +128,6 @@ namespace ConvAppServer.Migrations
             modelBuilder.Entity("ConvAppServer.Models.Posting", b =>
                 {
                     b.Navigation("PostingNodes");
-                });
-
-            modelBuilder.Entity("ConvAppServer.Models.User", b =>
-                {
-                    b.Navigation("CreatedPostings");
                 });
 #pragma warning restore 612, 618
         }

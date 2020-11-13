@@ -4,14 +4,16 @@ using ConvAppServer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ConvAppServer.Migrations
 {
     [DbContext(typeof(SqlContext))]
-    partial class SqlContextModelSnapshot : ModelSnapshot
+    [Migration("20201112161909_2")]
+    partial class _2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,11 +142,13 @@ namespace ConvAppServer.Migrations
 
             modelBuilder.Entity("ConvAppServer.Models.Posting", b =>
                 {
-                    b.HasOne("ConvAppServer.Models.User", null)
+                    b.HasOne("ConvAppServer.Models.User", "Creator")
                         .WithMany("CreatedPostings")
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Creator");
                 });
 
             modelBuilder.Entity("ConvAppServer.Models.PostingNode", b =>

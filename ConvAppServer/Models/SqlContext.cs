@@ -16,14 +16,17 @@ namespace ConvAppServer.Models
                 .Property(b => b.Created)
                 .ValueGeneratedOnAdd();
 
-            modelBuilder.Entity<Posting>()
-                .HasOne(p => p.Creator)
-                .WithMany(u => u.CreatedPostings)
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.CreatedPostings)
+                .WithOne()
                 .HasForeignKey(p => p.CreatorId)
                 .HasPrincipalKey(u => u.Id);
 
+            modelBuilder.Entity<PostingNode>()
+                .HasKey(pn => new { pn.PostingId, pn.OrderIndex });
+
             modelBuilder.Entity<Posting>()
-                .HasMany<PostingNode>(p => p.PostingNodes)
+                .HasMany(p => p.PostingNodes)
                 .WithOne();
 
             modelBuilder.Entity<UserAuth>()

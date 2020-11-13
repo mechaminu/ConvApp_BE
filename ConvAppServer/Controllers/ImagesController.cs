@@ -93,7 +93,6 @@ namespace ConvAppServer.Controllers
 
             return string.Join(";",fileNameList.ToArray());
 
-            // TODO 이미지 저장 후 관련 포스팅 항목의 images 컬럼 업데이트까지 진행하고 싶음
         }
 
         // 16자리 랜덤파일이름 생성기
