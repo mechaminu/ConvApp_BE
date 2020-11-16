@@ -26,50 +26,97 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Posting>> GetPosting(int id)
+        public async Task<ActionResult<Posting>> GetPostingDetail(int id)
         {
-            _logger.LogInformation($"received GET request for postings");
+            _logger.LogInformation($"received GET request for a posting");
 
-            var posting = await _context.Postings.FindAsync(id);
+            var result = await _context.Postings
+                .Where(p => p.Id == id)
+                .SingleAsync();
 
-            if (posting == null)
+            if (result == null)
             {
                 return NotFound();
             }
 
-            return posting;
+            return result;
+        }
+
+
+        [HttpGet("latest")]
+        public async Task<ActionResult<int>> GetLatestPostingId()
+        {
+            _logger.LogInformation($"received GET request for id of the latest posting");
+            int result;
+
+            try
+            {
+                result = await _context.Postings
+                .OrderByDescending(p => p.CreatedDate)
+                .Select(p => p.Id)
+                .FirstAsync();
+            }
+            catch
+            {
+                result = 0;
+            }
+            
+
+            return result;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings(
-            [FromQuery(Name = "start")] int start = 0,
-            [FromQuery(Name = "end")] int end = 20,
-            [FromQuery(Name = "isRecipe")] bool? isRecipe = false)
+        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings([FromQuery(Name = "type")] byte? type = null)
         {
-            _logger.LogInformation($"received GET request for postings\n\twith Querystring - start{start} end{end} isRecipe{isRecipe}");
+            _logger.LogInformation($"received GET request for some postings\n\ttype{type}");
 
-            var query = _context.Postings
-                .Where(p => p.IsRecipe == isRecipe)
-                .OrderBy(p => p.Created)
-                .Skip(start).Take(end)
-                .Include(p => p.PostingNodes);
-
-            return await query.ToListAsync();
+            if (type != null)
+            {
+                return await _context.Postings
+                .Where(p => p.PostingType == type)
+                .OrderByDescending(p => p.CreatedDate)
+                .Take(20)
+                .Include(p => p.PostingNodes
+                    .OrderBy(pn => pn.OrderIndex))
+                .ToListAsync();
+            }
+            else
+            {
+                return await _context.Postings
+                .OrderByDescending(p => p.CreatedDate)
+                .Take(20)
+                .Include(p => p.PostingNodes
+                    .OrderBy(pn => pn.OrderIndex))
+                .ToListAsync();
+            }
         }
 
-        [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Posting>>> GetPostingsAll(
-            [FromQuery(Name = "start")] int start = 0,
-            [FromQuery(Name = "end")] int end = 20)
+        /// <summary>
+        /// 무한스크롤 구현을 위한 페이징 쿼리
+        /// </summary>
+        /// <param name="offsetId">페이지 시작 포스팅 id</param>
+        /// <param name="type">포스팅 종류</param>
+        /// <param name="page">페이지 번호</param>
+        /// <returns></returns>
+        [HttpGet("{offsetId}")]
+        public async Task<ActionResult<IEnumerable<Posting>>> GetPostingsOffset(
+            int offsetId,
+            [FromQuery(Name = "type")] byte? type = null,
+            [FromQuery(Name = "page")] int page = 0)
         {
-            _logger.LogInformation($"received GET request for all postings\n\twith Querystring - start{start} end{end}");
+            _logger.LogInformation($"received GET request from scrolling for postings\n\toffsetId{offsetId} type{type} page{page}");
 
-            var query = _context.Postings
-                .OrderBy(p => p.Created)
-                .Skip(start).Take(end)
-                .Include(p => p.PostingNodes);
+            var result = await _context.Postings
+                .Where(p => p.Id < offsetId)
+                .Where(p => type == null || p.PostingType == type)
+                .OrderByDescending(p => p.CreatedDate)
+                .Skip(10 * (page - 1))
+                .Take(10 * page)
+                .Include(p => p.PostingNodes
+                    .OrderBy(pn => pn.OrderIndex))
+                .ToListAsync();
 
-            return await query.ToListAsync();
+            return result;
         }
 
         // POST: api/UserRecipes
@@ -91,18 +138,16 @@ namespace ConvAppServer.Controllers
                 var json = Encoding.UTF8.GetString(bytes);
                 var posting = JsonConvert.DeserializeObject<Posting>(json);
 
-                posting.Created = DateTime.UtcNow;
-
                 foreach (var node in posting.PostingNodes)
                 {
                     node.OrderIndex = (byte)posting.PostingNodes.IndexOf(node);
                 }
 
                 _context.Postings.Add(posting);
-                
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction("GetPosting", new { posting.Id }, posting);
+                return Ok();
+                //return CreatedAtAction("GetPostingDetail", new { posting.Id }, posting);
             }
             catch (Exception e)
             {

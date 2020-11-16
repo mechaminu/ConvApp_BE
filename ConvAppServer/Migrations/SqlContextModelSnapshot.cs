@@ -19,6 +19,63 @@ namespace ConvAppServer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.0");
 
+            modelBuilder.Entity("ConvAppServer.Models.Comment", b =>
+                {
+                    b.Property<int>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ParentType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ParentId", "ParentType", "CreatedDate");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("ConvAppServer.Models.Like", b =>
+                {
+                    b.Property<byte>("ParentType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ParentType", "ParentId");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("Likes");
+                });
+
             modelBuilder.Entity("ConvAppServer.Models.Posting", b =>
                 {
                     b.Property<int>("Id")
@@ -26,15 +83,17 @@ namespace ConvAppServer.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<DateTime>("Created")
-                        .ValueGeneratedOnAdd()
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsRecipe")
-                        .HasColumnType("bit");
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("PostingType")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -51,7 +110,7 @@ namespace ConvAppServer.Migrations
                     b.Property<byte>("OrderIndex")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("ImageFilename")
+                    b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Text")
@@ -69,11 +128,17 @@ namespace ConvAppServer.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<string>("Category")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<byte>("CategoryType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -81,7 +146,7 @@ namespace ConvAppServer.Migrations
                     b.Property<int>("Price")
                         .HasColumnType("int");
 
-                    b.Property<byte>("Store")
+                    b.Property<byte>("StoreType")
                         .HasColumnType("tinyint");
 
                     b.HasKey("Id");
@@ -95,6 +160,12 @@ namespace ConvAppServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .UseIdentityColumn();
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -115,7 +186,7 @@ namespace ConvAppServer.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PwdDigest")
+                    b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
@@ -136,6 +207,24 @@ namespace ConvAppServer.Migrations
                     b.HasIndex("ProductsId");
 
                     b.ToTable("PostingProduct");
+                });
+
+            modelBuilder.Entity("ConvAppServer.Models.Comment", b =>
+                {
+                    b.HasOne("ConvAppServer.Models.User", null)
+                        .WithMany("CreatedComments")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ConvAppServer.Models.Like", b =>
+                {
+                    b.HasOne("ConvAppServer.Models.User", null)
+                        .WithMany("CreatedLikes")
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ConvAppServer.Models.Posting", b =>
@@ -189,6 +278,10 @@ namespace ConvAppServer.Migrations
 
             modelBuilder.Entity("ConvAppServer.Models.User", b =>
                 {
+                    b.Navigation("CreatedComments");
+
+                    b.Navigation("CreatedLikes");
+
                     b.Navigation("CreatedPostings");
                 });
 #pragma warning restore 612, 618

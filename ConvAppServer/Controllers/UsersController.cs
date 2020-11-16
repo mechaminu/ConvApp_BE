@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ConvAppServer.Models;
+using System.IO;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace ConvAppServer.Controllers
 {
@@ -32,6 +35,25 @@ namespace ConvAppServer.Controllers
             }
 
             return user;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> AddUser()
+        {
+            byte[] bytes;
+            using (var ms = new MemoryStream())
+            {
+                using (var reqStream = Request.Body)
+                    await reqStream.CopyToAsync(ms);
+                bytes = ms.ToArray();
+            }
+            var json = Encoding.UTF8.GetString(bytes);
+            var user = JsonConvert.DeserializeObject<User>(json);
+
+            _context.Add(user);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetUser", new { user.Id }, user);
         }
     }
 }

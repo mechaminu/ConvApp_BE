@@ -3,13 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {
-    public class Product
+    public class Product : Feedbackable
     {
-        public int Id { get; set; }
-        public byte Store { get; set; }
-        public string Category { get; set; }
+        public byte StoreType { get; set; }
+        public byte CategoryType { get; set; }
+
+        public int Price { get; set; }  // or decimal for the future USD implementation?
+
         public string Name { get; set; }
-        public int Price { get; set; }
         public string Image { get; set; }
 
         public List<Posting> Postings { get; set; }
