@@ -24,8 +24,8 @@ namespace ConvAppServer.Migrations
                     b.Property<int>("ParentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ParentType")
-                        .HasColumnType("int");
+                    b.Property<byte>("ParentType")
+                        .HasColumnType("tinyint");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");

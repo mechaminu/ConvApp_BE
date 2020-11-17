@@ -96,6 +96,15 @@ namespace ConvAppServer.Models
                 if (entityEntry.State == EntityState.Added)
                 {
                     ((BaseEntity)elem).CreatedDate = DateTime.UtcNow;
+
+                    if (elem is Feedbackable)
+                    {
+                        var elemf = (Feedbackable)elem;
+
+                        elemf.ViewCount = 0;
+                        elemf.CommentCount = 0;
+                        elemf.LikeCount = 0;
+                    }
                 }
             }
 

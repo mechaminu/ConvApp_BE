@@ -30,18 +30,64 @@ namespace ConvAppServer.Controllers
         {
             _logger.LogInformation($"received GET request for a posting");
 
-            var result = await _context.Postings
+            var posting = await _context.Postings
                 .Where(p => p.Id == id)
                 .SingleAsync();
 
-            if (result == null)
+            if (posting == null)
             {
                 return NotFound();
             }
 
-            return result;
+            return posting;
         }
 
+        [HttpGet("{id}/comment")]
+        public async Task<ActionResult<List<Comment>>> GetPostingComments(int id)
+        {
+            var comments = await _context.Comments
+                .Where(c => c.ParentType == (byte)FeedbackableType.Posting)
+                .Where(c => c.ParentId == id)
+                .OrderBy(c => c.CreatedDate)
+                .ToListAsync();
+
+            return comments;
+        }
+
+        [HttpPost("{id}/comment")]
+        public async Task<ActionResult> PostPostingComments(int id)
+        {
+            try
+            {
+                byte[] bytes;
+                using (var ms = new MemoryStream())
+                {
+                    using (var reqStream = Request.Body)
+                        await reqStream.CopyToAsync(ms);
+                    bytes = ms.ToArray();
+                }
+                var json = Encoding.UTF8.GetString(bytes);
+                var comment = JsonConvert.DeserializeObject<Comment>(json);
+
+
+                _context.Comments.Add(new Comment
+                {
+                    ParentType = (byte)FeedbackableType.Posting,
+                    ParentId = id,
+
+                    CreatorId = comment.CreatorId,
+                    Text = comment.Text
+
+                });
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction("GetPostingComments", new { id });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
         [HttpGet("latest")]
         public async Task<ActionResult<int>> GetLatestPostingId()
