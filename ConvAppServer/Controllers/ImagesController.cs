@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using HttpMultipartParser;
-using System.Net;
-using System.Net.Http;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.AspNetCore.Http.Extensions;
-using HeyRed.Mime;
-using Newtonsoft.Json;
-using Microsoft.Extensions.Logging;
-using System.Runtime.Loader;
-using Azure.Storage.Blobs;
+﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Base62;
+using HttpMultipartParser;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace ConvAppServer.Controllers
 {
@@ -63,7 +54,7 @@ namespace ConvAppServer.Controllers
                 _logger.LogError(e.Message);
                 return BadRequest(e);
             }
-            
+
             foreach (var file in parser.Files)
             {
                 _logger.LogInformation($"formdata found - ({file.ContentDisposition}|{file.Name}|{file.FileName}|{file.ContentType})");
@@ -87,11 +78,11 @@ namespace ConvAppServer.Controllers
                 } while (dupe);
 
                 _logger.LogInformation($"image saved - {filePath}");
-                await blobClient.UploadAsync(data,new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType } });
+                await blobClient.UploadAsync(data, new BlobUploadOptions { HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType } });
                 fileNameList.Add(fileName);
             }
 
-            return string.Join(";",fileNameList.ToArray());
+            return string.Join(";", fileNameList.ToArray());
 
         }
 
@@ -101,7 +92,7 @@ namespace ConvAppServer.Controllers
             var t = BitConverter.GetBytes(DateTime.UtcNow.Ticks).ToBase62() + "_";
 
             var base62Chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-            var len = 15 - t.Length;
+            var len = 16 - t.Length;
 
             char[] res = new char[len];
             var random = new Random();

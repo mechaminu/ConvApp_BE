@@ -1,16 +1,16 @@
-using System;
+using Azure.Core.Extensions;
+using Azure.Storage.Blobs;
+using ConvAppServer.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Logging;
-using Azure.Storage.Blobs;
-using Azure.Core.Extensions;
-using ConvAppServer.Models;
-using ConvAppServer.Controllers;
+using System;
+using System.Text.Json.Serialization;
 
 namespace ConvAppServer
 {
@@ -27,11 +27,13 @@ namespace ConvAppServer
         public void ConfigureServices(IServiceCollection services)
         {
             // 데이터베이스 Azure SQL로 마이그레이션 완료
-            services.AddDbContext<SqlContext>(o =>
+            services.AddDbContext<MainContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("SqlDBConnectionString")));
-            services.AddAzureClients(o => 
+            services.AddAzureClients(o =>
                 o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
-
+            services.AddMvc()
+                .AddJsonOptions(o =>
+                    o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
             services.AddControllers();
         }
 

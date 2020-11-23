@@ -1,14 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+﻿using ConvAppServer.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ConvAppServer.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ConvAppServer.Controllers
 {
@@ -16,10 +16,10 @@ namespace ConvAppServer.Controllers
     [ApiController]
     public class PostingsController : ControllerBase
     {
-        private readonly SqlContext _context;
+        private readonly MainContext _context;
         private readonly ILogger _logger;
 
-        public PostingsController(SqlContext context, ILogger<PostingsController> logger)
+        public PostingsController(MainContext context, ILogger<PostingsController> logger)
         {
             _context = context;
             _logger = logger;
@@ -42,53 +42,6 @@ namespace ConvAppServer.Controllers
             return posting;
         }
 
-        [HttpGet("{id}/comment")]
-        public async Task<ActionResult<List<Comment>>> GetPostingComments(int id)
-        {
-            var comments = await _context.Comments
-                .Where(c => c.ParentType == (byte)FeedbackableType.Posting)
-                .Where(c => c.ParentId == id)
-                .OrderBy(c => c.CreatedDate)
-                .ToListAsync();
-
-            return comments;
-        }
-
-        [HttpPost("{id}/comment")]
-        public async Task<ActionResult> PostPostingComments(int id)
-        {
-            try
-            {
-                byte[] bytes;
-                using (var ms = new MemoryStream())
-                {
-                    using (var reqStream = Request.Body)
-                        await reqStream.CopyToAsync(ms);
-                    bytes = ms.ToArray();
-                }
-                var json = Encoding.UTF8.GetString(bytes);
-                var comment = JsonConvert.DeserializeObject<Comment>(json);
-
-
-                _context.Comments.Add(new Comment
-                {
-                    ParentType = (byte)FeedbackableType.Posting,
-                    ParentId = id,
-
-                    CreatorId = comment.CreatorId,
-                    Text = comment.Text
-
-                });
-                await _context.SaveChangesAsync();
-
-                return CreatedAtAction("GetPostingComments", new { id });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
         [HttpGet("latest")]
         public async Task<ActionResult<int>> GetLatestPostingId()
         {
@@ -106,13 +59,12 @@ namespace ConvAppServer.Controllers
             {
                 result = 0;
             }
-            
 
             return result;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Posting>>> GetPostings([FromQuery(Name = "type")] byte? type = null)
+        public async Task<ActionResult<List<Posting>>> GetPostings([FromQuery(Name = "type")] byte? type = null)
         {
             _logger.LogInformation($"received GET request for some postings\n\ttype{type}");
 
@@ -124,6 +76,8 @@ namespace ConvAppServer.Controllers
                 .Take(20)
                 .Include(p => p.PostingNodes
                     .OrderBy(pn => pn.OrderIndex))
+                .Include(p => p.Products)
+                .AsSplitQuery()
                 .ToListAsync();
             }
             else
@@ -133,6 +87,7 @@ namespace ConvAppServer.Controllers
                 .Take(20)
                 .Include(p => p.PostingNodes
                     .OrderBy(pn => pn.OrderIndex))
+                .Include(p => p.Products)
                 .ToListAsync();
             }
         }
@@ -184,16 +139,24 @@ namespace ConvAppServer.Controllers
                 var json = Encoding.UTF8.GetString(bytes);
                 var posting = JsonConvert.DeserializeObject<Posting>(json);
 
+                byte cnt = 0;
                 foreach (var node in posting.PostingNodes)
                 {
-                    node.OrderIndex = (byte)posting.PostingNodes.IndexOf(node);
+                    node.OrderIndex = cnt++;
                 }
+
+                var prod = new List<Product>();
+                foreach (var prodDTO in posting.Products)
+                {
+                    var product = await _context.Products.FindAsync(prodDTO.Id);
+                    prod.Add(product);
+                }
+                posting.Products = prod;
 
                 _context.Postings.Add(posting);
                 await _context.SaveChangesAsync();
 
                 return Ok();
-                //return CreatedAtAction("GetPostingDetail", new { posting.Id }, posting);
             }
             catch (Exception e)
             {

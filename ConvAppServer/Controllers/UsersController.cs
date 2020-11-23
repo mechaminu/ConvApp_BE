@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using ConvAppServer.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConvAppServer.Models;
+using Newtonsoft.Json;
 using System.IO;
 using System.Text;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace ConvAppServer.Controllers
 {
@@ -16,16 +11,16 @@ namespace ConvAppServer.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly SqlContext _context;
+        private readonly MainContext _context;
 
-        public UsersController(SqlContext context)
+        public UsersController(MainContext context)
         {
             _context = context;
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<UserDTO>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -34,11 +29,11 @@ namespace ConvAppServer.Controllers
                 return NotFound();
             }
 
-            return user;
+            return Models.User.ToDTO(user);
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> AddUser()
+        public async Task<IActionResult> PostUser()
         {
             byte[] bytes;
             using (var ms = new MemoryStream())

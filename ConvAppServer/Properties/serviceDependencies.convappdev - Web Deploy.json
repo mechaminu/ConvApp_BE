@@ -11,6 +11,12 @@
       "type": "storage.azure",
       "connectionId": "BlobStorageConnectionString",
       "secretStore": "AzureKeyVault"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "",
+      "suggestion": "true",
+      "ignored": "true"
     }
   }
 }

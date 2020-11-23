@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ConvAppServer.Models
 {
-    public class Posting : Feedbackable
+    public class Posting : Feedbackable, IHasViewCount
     {
+        public int Id { get; set; }
         public byte PostingType { get; set; }
         public int CreatorId { get; set; }
 
-        public List<Product> Products { get; set; }
-        public List<PostingNode> PostingNodes { get; set; }
+        public int ViewCount { get; set; }
+
+        public ICollection<PostingNode> PostingNodes { get; set; }
+        public ICollection<Product> Products { get; set; }
     }
 
     public class PostingNode
