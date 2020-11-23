@@ -86,7 +86,7 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpDelete("comment")]
-        public async Task<ActionResult<object>> DeleteLike([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
+        public async Task<ActionResult<object>> DeleteComment([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
         {
             var result = await _context.Comments.FindAsync(type, id, comment.CreatedDate);
 
