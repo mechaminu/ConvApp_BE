@@ -14,14 +14,12 @@ namespace ConvAppServer.Controllers
     public class FeedbacksController : ControllerBase
     {
         private readonly MainContext _context;
-        private readonly ILogger _logger;
 
         private readonly int pageSize = 10;
 
-        public FeedbacksController(MainContext context, ILogger<FeedbacksController> logger)
+        public FeedbacksController(MainContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
         [HttpGet]
@@ -42,47 +40,48 @@ namespace ConvAppServer.Controllers
                 .Where(c => c.ParentId == id)
                 .ToListAsync();
 
-            return new FeedbackDTO { comments = comments, likes = likes };
+            return new FeedbackDTO { Comments = comments, Likes = likes };
         }
 
         public class FeedbackDTO
         {
-            public List<Comment> comments { get; set; }
-            public List<Like> likes { get; set; }
+            public List<Comment> Comments { get; set; }
+            public List<Like> Likes { get; set; }
         }
 
         [HttpGet("comment")]
-        public async Task<ActionResult<object>> GetComments([FromQuery] byte type, [FromQuery] int id, [FromQuery] DateTime time, [FromQuery] int? page = null)
+        public async Task<ActionResult<List<Comment>>> GetComments([FromQuery] byte type, [FromQuery] int id)
         {
             var query = _context.Comments
                 .Where(c => c.ParentType == type)
                 .Where(c => c.ParentId == id)
-                .Where(c => c.CreatedDate < time)
+                //.Where(c => c.CreatedDate < time)
                 .OrderBy(c => c.CreatedDate);
 
-            var total = await query.CountAsync();
-            var maxPage = Math.Ceiling((double)total / pageSize) - 1;
+            //var total = await query.CountAsync();
+            //var maxPage = Math.Ceiling((double)total / pageSize) - 1;
 
-            if (page != null)
-            {
-                if (page > maxPage)
-                    return NoContent();
+            //if (page != null)
+            //{
+            //    if (page > maxPage)
+            //        return NoContent();
 
-                query = (IOrderedQueryable<Comment>)query.Skip((int)(pageSize * page)).Take(pageSize);
-            }
+            //    query = (IOrderedQueryable<Comment>)query.Skip((int)(pageSize * page)).Take(pageSize);
+            //}
 
             var comments = await query.ToListAsync();
 
-            return new { page, maxPage, comments };
+            return comments;
         }
 
         [HttpPost("comment")]
-        public async Task<ActionResult<object>> PostComment([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
+        public async Task<ActionResult<List<Comment>>> PostComment([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
         {
-            _context.Comments.Add(new Comment { ParentType = type, ParentId = id, CreatorId = comment.CreatorId, Text = comment.Text });
+            var cmt = new Comment { ParentType = type, ParentId = id, CreatorId = comment.CreatorId, Text = comment.Text };
+            _context.Comments.Add(cmt);
             await _context.SaveChangesAsync();
 
-            return await GetComments(type, id, DateTime.UtcNow);
+            return CreatedAtAction(nameof(GetComments), new { type = type, id = id }, cmt);
         }
 
         [HttpDelete("comment")]
@@ -96,7 +95,7 @@ namespace ConvAppServer.Controllers
             _context.Comments.Remove(result);
             await _context.SaveChangesAsync();
 
-            return await GetComments(type, id, DateTime.UtcNow);
+            return await GetComments(type, id);
         }
 
         [HttpGet("like")]

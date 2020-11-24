@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {
@@ -7,7 +8,8 @@ namespace ConvAppServer.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public int Price { get; set; }  // or decimal for the future USD implementation?
-        public string Image { get; set; }
+        [Column(TypeName = "char(16)")]
+        public string ImageFilename { get; set; }
 
         public int StoreId { get; set; }
         public int CategoryId { get; set; }
@@ -21,6 +23,7 @@ namespace ConvAppServer.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        [Column(TypeName = "char(16)")]
         public string ImageFileName { get; set; }
     }
 
@@ -28,6 +31,7 @@ namespace ConvAppServer.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        [Column(TypeName = "char(16)")]
         public string ImageFileName { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace ConvAppServer.Models
         [Column(TypeName = "nvarchar(15)")]
         public string Name { get; set; }
         [Column(TypeName = "char(16)")]
-        public string ProfileImage { get; set; }
+        public string ImageFilename { get; set; }
 
         // Secrets
         [Column(TypeName = "varchar(255)")]
@@ -23,7 +23,7 @@ namespace ConvAppServer.Models
             {
                 Id = user.Id,
                 Name = user.Name,
-                ProfileImage = user.ProfileImage
+                ImageFilename = user.ImageFilename
             };
         }
     }
@@ -32,6 +32,6 @@ namespace ConvAppServer.Models
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string ProfileImage { get; set; }
+        public string ImageFilename { get; set; }
     }
 }
