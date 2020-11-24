@@ -1,7 +1,6 @@
 ﻿using ConvAppServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +13,6 @@ namespace ConvAppServer.Controllers
     public class FeedbacksController : ControllerBase
     {
         private readonly MainContext _context;
-
-        private readonly int pageSize = 10;
 
         public FeedbacksController(MainContext context)
         {
@@ -81,7 +78,7 @@ namespace ConvAppServer.Controllers
             _context.Comments.Add(cmt);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetComments), new { type = type, id = id }, cmt);
+            return CreatedAtAction(nameof(GetComments), new { type, id }, cmt);
         }
 
         [HttpDelete("comment")]

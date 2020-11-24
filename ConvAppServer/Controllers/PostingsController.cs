@@ -52,7 +52,7 @@ namespace ConvAppServer.Controllers
 
             IQueryable<Posting> query = type == null ? _context.Postings : _context.Postings.Where(p => p.PostingType == type);
 
-            //query = query.Where(p => p.CreatedDate <= option.baseTime);
+            query = query.Where(p => p.CreatedDate <= time);
 
             int maxPage = (int)Math.Floor((double)(await query.CountAsync()) / 20);
 

@@ -9,11 +9,8 @@ namespace ConvAppServer.Models
 {
     public class MainContext : DbContext
     {
-        private ILogger _logger;
-
-        public MainContext(DbContextOptions<MainContext> options, ILogger<MainContext> logger) : base(options)
+        public MainContext(DbContextOptions<MainContext> options) : base(options)
         {
-            _logger = logger;
         }
 
         public DbSet<Posting> Postings { get; set; }

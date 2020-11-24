@@ -18,26 +18,14 @@ namespace ConvAppServer.Models
 
         public static FeedbackableType GetEntityType(Feedbackable f)
         {
-            FeedbackableType res = 0;
-            switch (f.GetType().Name)
+            return f.GetType().Name switch
             {
-                case "Posting":
-                    res = FeedbackableType.Posting;
-                    break;
-                case "Product":
-                    res = FeedbackableType.Product;
-                    break;
-                case "Comment":
-                    res = FeedbackableType.Comment;
-                    break;
-                case "User":
-                    res = FeedbackableType.User;
-                    break;
-                default:
-                    throw new InvalidOperationException("Can't find entity type!");
-            }
-
-            return res;
+                "Posting" => FeedbackableType.Posting,
+                "Product" => FeedbackableType.Product,
+                "Comment" => FeedbackableType.Comment,
+                "User" => FeedbackableType.User,
+                _ => throw new InvalidOperationException("Can't find entity type!"),
+            };
         }
     }
 

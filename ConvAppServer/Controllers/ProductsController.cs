@@ -49,7 +49,7 @@ namespace ConvAppServer.Controllers
             _logger.LogInformation($"Get Products store{store} cat{category}");
 
             var products = await _context.Products
-                .Where(p => (store != null ? p.StoreId == store : true) && (category != null ? p.CategoryId == category : true))
+                .Where(p => (store == null || p.StoreId == store) && (category == null || p.CategoryId == category))
                 .OrderByDescending(p => p.CreatedDate)
                 .Include(p => p.Postings)
                     .ThenInclude(p => p.PostingNodes)
