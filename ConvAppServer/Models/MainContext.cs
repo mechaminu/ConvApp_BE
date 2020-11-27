@@ -9,9 +9,17 @@ namespace ConvAppServer.Models
 {
     public class MainContext : DbContext
     {
-        public MainContext(DbContextOptions<MainContext> options) : base(options)
+        private readonly ILogger _logger;
+        
+        public MainContext(DbContextOptions<MainContext> options, ILogger<MainContext> logger) : base(options)
         {
+            _logger = logger;
         }
+
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        //    optionsBuilder
+        //        .EnableDetailedErrors()
+        //        .LogTo((str) => _logger.LogInformation(str));
 
         public DbSet<Posting> Postings { get; set; }
         public DbSet<User> Users { get; set; }
@@ -24,6 +32,7 @@ namespace ConvAppServer.Models
         // 피드백
         public DbSet<Like> Likes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<View> Views { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,8 +54,6 @@ namespace ConvAppServer.Models
 
             modelBuilder.Entity<Comment>(b =>
             {
-                b.HasKey(c => new { c.ParentType, c.ParentId, c.CreatedDate });
-
                 b.HasOne<User>()
                  .WithMany()
                  .HasForeignKey(c => c.CreatorId)
@@ -66,6 +73,17 @@ namespace ConvAppServer.Models
                  .HasForeignKey(p => p.CategoryId)
                  .HasPrincipalKey(c => c.Id);
             });
+
+            // 조회 행위 테이블 정의
+            modelBuilder.Entity<View>(b =>
+            {
+                b.HasKey(v => new { v.Type, v.Id, v.UserId, v.Date });
+
+                b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(v => v.UserId)
+                .HasPrincipalKey(u => u.Id);
+            });
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -77,11 +95,11 @@ namespace ConvAppServer.Models
             foreach (var entityEntry in entries)
             {
                 var elem = entityEntry.Entity as BaseEntity;
-                elem.ModifiedDate = DateTime.UtcNow;
 
                 if (entityEntry.State == EntityState.Added)
                 {
                     elem.CreatedDate = DateTime.UtcNow;
+                    elem.ModifiedDate = DateTime.UtcNow;
 
                     if (elem is Feedbackable)
                     {

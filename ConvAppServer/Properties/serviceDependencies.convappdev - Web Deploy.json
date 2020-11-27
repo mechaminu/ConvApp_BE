@@ -13,10 +13,10 @@
       "secretStore": "AzureKeyVault"
     },
     "mssql1": {
-      "type": "mssql",
-      "connectionId": "",
-      "suggestion": "true",
-      "ignored": "true"
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/paloaltoinfo/databases/convapp-free",
+      "type": "mssql.azure",
+      "connectionId": "ConvAppBE_DBConnectionString",
+      "secretStore": "AzureKeyVault"
     }
   }
 }

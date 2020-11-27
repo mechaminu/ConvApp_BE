@@ -1,8 +1,11 @@
 ﻿using ConvAppServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,23 +16,116 @@ namespace ConvAppServer.Controllers
     public class FeedbacksController : ControllerBase
     {
         private readonly MainContext _context;
+        private readonly ILogger<FeedbacksController> _logger;
 
-        public FeedbacksController(MainContext context)
+        public FeedbacksController(MainContext context, ILogger<FeedbacksController> logger)
         {
             _context = context;
+            _logger = logger;
+        }
+
+        [HttpGet("ranking")]
+        public async Task<ActionResult> FillScores()
+        {
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+            var postings = await _context.Postings
+                .ToListAsync();
+
+            foreach (var posting in postings)
+            {
+                var likeCnt = await _context.Likes
+                    .Where(l => l.ParentType == (byte)FeedbackableType.Posting && l.ParentId == posting.Id)
+                    .CountAsync();
+
+                //var viewCnt = await _context.Views
+                //    .Where(v => v.Type == (byte)FeedbackableType.Posting && v.Id == posting.Id)
+                //    .CountAsync();
+                var viewCnt = posting.ViewCount;
+
+                var cmtList = await _context.Comments
+                    .Where(c => c.ParentType == (byte)FeedbackableType.Posting && c.ParentId == posting.Id)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                async Task<int> cmtCntCalc(int id)
+                {
+                    var subCmtList = await _context.Comments
+                        .Where(_c => _c.ParentType == (byte)FeedbackableType.Comment && _c.ParentId == id)
+                        .Select(c => c.Id)
+                        .ToListAsync();
+
+                    int result = 0;
+                    foreach (var _id in subCmtList)
+                        result += await cmtCntCalc(_id);
+
+                    return result + 1;
+                }
+
+                int cmtCnt = 0;
+                foreach (var id in cmtList)
+                    cmtCnt += await cmtCntCalc(id);
+
+                posting.AlltimeScore = likeCnt * 7 + cmtCnt * 2 + viewCnt;
+            }
+            sw.Stop();
+            _logger.LogInformation($"Postings score evaluation - {postings.Count} entries - {(double)sw.ElapsedMilliseconds / 1000} sec ({sw.ElapsedMilliseconds / postings.Count}ms per entry)");
+
+            sw.Restart();
+            await _context.SaveChangesAsync();
+            sw.Stop();
+            _logger.LogInformation($"saving changes - {(double)sw.ElapsedMilliseconds / 1000} sec");
+
+            return Ok();
+        }
+
+        [HttpPost("view")]
+        public async Task<ActionResult> AddView([FromBody] View view)
+        {
+            _logger.LogInformation("Post request for view creation");
+
+            var fiveminutebefore = (DateTime.UtcNow).Subtract(TimeSpan.FromMinutes(5));
+
+            bool recent = await _context.Views
+                .Where(v => v.Type == view.Type)
+                .Where(v => v.Id == view.Id)
+                .Where(v => v.UserId == view.UserId)
+                .Where(v => v.Date > fiveminutebefore)
+                .AnyAsync();
+            if (recent)
+                return StatusCode(406);
+
+            switch (view.Type)
+            {
+                case (byte)FeedbackableType.Posting:
+                    (await _context.Postings.FindAsync(view.Id)).ViewCount++;
+                    break;
+                case (byte)FeedbackableType.Product:
+                    (await _context.Products.FindAsync(view.Id)).ViewCount++;
+                    break;
+                default:
+                    return StatusCode(406);
+            }
+
+            _context.Views.Add(new View
+            {
+                Type = view.Type,
+                Id = view.Id,
+                Date = DateTime.UtcNow,
+                UserId = view.UserId
+            });
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
         [HttpGet]
-        public async Task<ActionResult<FeedbackDTO>> GetFeedbacks([FromQuery] byte type, [FromQuery] int id, [FromQuery] DateTime? time = null)
+        public async Task<ActionResult<FeedbackDTO>> GetFeedbacks([FromQuery] byte type, [FromQuery] int id)
         {
-            var query = _context.Comments
+            var comments = await _context.Comments
                 .Where(c => c.ParentType == type)
-                .Where(c => c.ParentId == id);
-
-            if (time != null)
-                query = query.Where(c => c.CreatedDate <= time);
-
-            var comments = await query.OrderBy(c => c.CreatedDate)
+                .Where(c => c.ParentId == id)
+                .OrderBy(c => c.CreatedDate)
                 .ToListAsync();
 
             var likes = await _context.Likes
@@ -52,7 +148,6 @@ namespace ConvAppServer.Controllers
             var query = _context.Comments
                 .Where(c => c.ParentType == type)
                 .Where(c => c.ParentId == id)
-                //.Where(c => c.CreatedDate < time)
                 .OrderBy(c => c.CreatedDate);
 
             //var total = await query.CountAsync();
@@ -77,6 +172,20 @@ namespace ConvAppServer.Controllers
             var cmt = new Comment { ParentType = type, ParentId = id, CreatorId = comment.CreatorId, Text = comment.Text };
             _context.Comments.Add(cmt);
             await _context.SaveChangesAsync();
+
+            // 문제가 없었다면 코멘트수 +1로 이어져야
+            // 여기서 Concurrency issue 발생할 여지가 있어 보이는데...
+
+            //switch (type)
+            //{
+            //    case (byte)FeedbackableType.Posting:
+            //        (await _context.Postings.FindAsync(id)).CommentCount
+                        
+            //    (byte)FeedbackableType.Product => _context.Products,
+            //    (byte)FeedbackableType.Comment => _context.Comments,
+            //    (byte)FeedbackableType.User => _context.Users,
+            //    _ => throw new Exception()
+            //};
 
             return CreatedAtAction(nameof(GetComments), new { type, id }, cmt);
         }

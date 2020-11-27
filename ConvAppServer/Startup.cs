@@ -28,7 +28,7 @@ namespace ConvAppServer
         {
             // 데이터베이스 Azure SQL로 마이그레이션 완료
             services.AddDbContext<MainContext>(o =>
-                o.UseSqlServer(Configuration.GetConnectionString("SqlDBConnectionString")));
+                o.UseSqlServer(Configuration.GetConnectionString("ConvAppBE-DBConnectionString")));
             services.AddAzureClients(o =>
                 o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
             services.AddMvc()

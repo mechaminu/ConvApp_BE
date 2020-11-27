@@ -7,6 +7,10 @@
     "storage1": {
       "type": "storage",
       "connectionId": "BlobStorageConnectionString"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "ConvAppBE_DBConnectionString"
     }
   }
 }

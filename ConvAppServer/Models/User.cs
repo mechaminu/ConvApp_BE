@@ -3,7 +3,7 @@
 namespace ConvAppServer.Models
 {
     // 유저 일반 데이터
-    public class User : Feedbackable
+    public class User : Feedbackable, IRankable
     {
         public int Id { get; set; }
         [Column(TypeName = "nvarchar(15)")]
@@ -16,6 +16,10 @@ namespace ConvAppServer.Models
         public string Email { get; set; }
         [Column(TypeName = "char(64)")]
         public string PasswordHash { get; set; }
+
+        public double MonthlyScore { get; set; }
+        public double SeasonalScore { get; set; }
+        public double AlltimeScore { get; set; }
 
         public static UserDTO ToDTO(User user)
         {

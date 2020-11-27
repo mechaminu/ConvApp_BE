@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,12 +10,8 @@ namespace ConvAppServer.Models
         public byte EntityType { get; set; }
 
         public int CommentCount { get; set; }
-        [NotMapped]
-        public List<Comment> Comments { get; set; }
-
         public int LikeCount { get; set; }
-        [NotMapped]
-        public List<Like> Likes { get; set; }
+        // 조회수 등록이 필요한 경우 IHasViewCount 구현하도록 함. << TODO 조회수 증가 메커니즘까지 Entity 클래스에서 제공
 
         public static FeedbackableType GetEntityType(Feedbackable f)
         {
@@ -35,5 +32,17 @@ namespace ConvAppServer.Models
         Product,
         Comment,
         User
+    }
+
+    interface IHasViewCount
+    {
+        int ViewCount { get; set; }
+    }
+
+    interface IRankable
+    {
+        double MonthlyScore { get; set; }
+        double SeasonalScore { get; set; }
+        double AlltimeScore { get; set; }
     }
 }

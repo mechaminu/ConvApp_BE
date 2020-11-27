@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {
-    public class Product : Feedbackable, IHasViewCount
+    public class Product : Feedbackable, IHasViewCount, IRankable
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -17,6 +17,10 @@ namespace ConvAppServer.Models
         public int ViewCount { get; set; }
 
         public ICollection<Posting> Postings { get; set; }
+
+        public double MonthlyScore { get; set; }
+        public double SeasonalScore { get; set; }
+        public double AlltimeScore { get; set; }
     }
 
     public class Store
