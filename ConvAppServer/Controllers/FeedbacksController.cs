@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -32,21 +30,21 @@ namespace ConvAppServer.Controllers
             var fiveminutebefore = (DateTime.UtcNow).Subtract(TimeSpan.FromMinutes(5));
 
             bool recent = await _context.Views
-                .Where(v => v.Type == view.Type)
-                .Where(v => v.Id == view.Id)
+                .Where(v => v.ParentType == view.ParentType)
+                .Where(v => v.ParentId == view.ParentId)
                 .Where(v => v.UserId == view.UserId)
                 .Where(v => v.Date > fiveminutebefore)
                 .AnyAsync();
             if (recent)
                 return StatusCode(406);
 
-            switch (view.Type)
+            switch (view.ParentType)
             {
                 case (byte)FeedbackableType.Posting:
-                    (await _context.Postings.FindAsync(view.Id)).ViewCount++;
+                    (await _context.Postings.FindAsync(view.ParentId)).ViewCount++;
                     break;
                 case (byte)FeedbackableType.Product:
-                    (await _context.Products.FindAsync(view.Id)).ViewCount++;
+                    (await _context.Products.FindAsync(view.ParentId)).ViewCount++;
                     break;
                 default:
                     return StatusCode(406);
@@ -54,8 +52,8 @@ namespace ConvAppServer.Controllers
 
             _context.Views.Add(new View
             {
-                Type = view.Type,
-                Id = view.Id,
+                ParentType = view.ParentType,
+                ParentId = view.ParentId,
                 Date = DateTime.UtcNow,
                 UserId = view.UserId
             });
@@ -124,7 +122,7 @@ namespace ConvAppServer.Controllers
             //{
             //    case (byte)FeedbackableType.Posting:
             //        (await _context.Postings.FindAsync(id)).CommentCount
-                        
+
             //    (byte)FeedbackableType.Product => _context.Products,
             //    (byte)FeedbackableType.Comment => _context.Comments,
             //    (byte)FeedbackableType.User => _context.Users,

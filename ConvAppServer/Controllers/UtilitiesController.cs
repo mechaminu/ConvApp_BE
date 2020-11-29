@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ConvAppServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-
-using ConvAppServer.Models;
 
 namespace ConvAppServer.Controllers
 {
@@ -26,7 +24,7 @@ namespace ConvAppServer.Controllers
         }
 
         [HttpGet("ranking")]
-        public async Task<ActionResult> CalcScores()
+        public async Task<ActionResult> CreateRankingScores()
         {
             Stopwatch sw = new Stopwatch();
 
@@ -41,7 +39,7 @@ namespace ConvAppServer.Controllers
                     .CountAsync();
 
                 var viewCnt = await _context.Views
-                    .Where(v => v.Type == (byte)FeedbackableType.Posting && v.Id == posting.Id)
+                    .Where(v => v.ParentType == (byte)FeedbackableType.Posting && v.ParentId == posting.Id)
                     .CountAsync();
 
                 var cmtList = await _context.Comments
@@ -102,7 +100,7 @@ namespace ConvAppServer.Controllers
                 }
 
                 var viewCnt = await _context.Views
-                    .Where(v => v.Type == (byte)FeedbackableType.Product && v.Id == product.Id)
+                    .Where(v => v.ParentType == (byte)FeedbackableType.Product && v.ParentId == product.Id)
                     .CountAsync();
 
                 var likeCnt = await _context.Likes
@@ -118,6 +116,48 @@ namespace ConvAppServer.Controllers
             _logger.LogInformation($"saving changes - {(double)sw.ElapsedMilliseconds / 1000} sec");
 
             return Ok();
+        }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<object>> SearchContents([FromQuery] string search)
+        {
+            var ftsQueryStr = search;
+            // 상품 검색 - 편의점명
+            var result1 = await _context.Stores
+                .Where(s => EF.Functions.Contains(s.Name, ftsQueryStr))
+                .Select(s => s.Id)
+                .ToArrayAsync();
+            // 상품 검색 - 카테고리
+            var result2 = await _context.Categories
+                .Where(c => EF.Functions.Contains(c.Name, ftsQueryStr))
+                .Select(c => c.Id)
+                .ToArrayAsync();
+            // 상품 검색 - 상품명
+            var resultProducts = await _context.Products
+                .Where(p => result1.Contains(p.StoreId) || result2.Contains(p.CategoryId) || EF.Functions.Contains(p.Name, ftsQueryStr) || EF.Functions.FreeText(p.Description, ftsQueryStr))
+                .ToListAsync();
+
+            // 포스팅 검색
+            var result = await _context.PostingNodes
+                .Where(pn => EF.Functions.FreeText(pn.Text, ftsQueryStr))
+                .Select(pn => pn.PostingId)
+                .ToArrayAsync();
+
+            var resultList = new List<int>();
+            foreach (var id in result)
+            {
+                if (!resultList.Contains(id))
+                    resultList.Add(id);
+            }
+
+            var resultPostings = new List<Posting>();
+            foreach (var id in resultList)
+                resultPostings.Add(await _context.Postings.FindAsync(id));
+
+            if (!resultProducts.Any() && !resultPostings.Any())
+                return NotFound();
+
+            return new { count = resultProducts.Count + resultPostings.Count, products = resultProducts, postings = resultPostings };
         }
     }
 }

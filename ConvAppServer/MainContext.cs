@@ -1,11 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using ConvAppServer.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-using ConvAppServer.Models;
 
 namespace ConvAppServer
 {
@@ -14,6 +12,7 @@ namespace ConvAppServer
         public MainContext(DbContextOptions<MainContext> options) : base(options) { }
 
         public DbSet<Posting> Postings { get; set; }
+        public DbSet<PostingNode> PostingNodes { get; set; }
         public DbSet<User> Users { get; set; }
 
         public DbSet<Product> Products { get; set; }
@@ -30,11 +29,17 @@ namespace ConvAppServer
             modelBuilder.Entity<Posting>(b =>
             {
                 b.HasMany(p => p.PostingNodes)
-                 .WithOne();
+                 .WithOne()
+                 .HasForeignKey(pn => pn.PostingId)
+                 .HasPrincipalKey(p => p.Id);
+
+                b.HasOne<User>()
+                 .WithMany()
+                 .HasForeignKey(p => p.UserId)
+                 .HasPrincipalKey(u => u.Id);
             });
 
-            modelBuilder.Entity<PostingNode>()
-                .HasKey(pn => new { pn.PostingId, pn.OrderIndex });
+            modelBuilder.Entity<PostingNode>();
 
             // 피드백 및 코멘트 테이블 정의
             modelBuilder.Entity<Like>(b =>
@@ -67,7 +72,7 @@ namespace ConvAppServer
             // 조회 행위 테이블 정의
             modelBuilder.Entity<View>(b =>
             {
-                b.HasKey(v => new { v.Type, v.Id, v.UserId, v.Date });
+                b.HasKey(v => new { v.ParentType, v.ParentId, v.UserId, v.Date });
 
                 b.HasOne<User>()
                 .WithMany()

@@ -13,14 +13,13 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "api/products",
-      "externalUrlConfiguration": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "externalUrlConfiguration": true
     },
     "ConvAppServer": {
       "commandName": "Project",
-      "launchBrowser": true,
       "launchUrl": "api/products",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

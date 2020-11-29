@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {
@@ -10,6 +11,8 @@ namespace ConvAppServer.Models
         public string Name { get; set; }
         [Column(TypeName = "char(16)")]
         public string ImageFilename { get; set; }
+
+        public List<Posting> Postings { get; set; }
 
         // Secrets
         [Column(TypeName = "varchar(255)")]
