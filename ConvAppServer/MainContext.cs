@@ -5,33 +5,23 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ConvAppServer.Models
+using ConvAppServer.Models;
+
+namespace ConvAppServer
 {
     public class MainContext : DbContext
     {
-        private readonly ILogger _logger;
-        
-        public MainContext(DbContextOptions<MainContext> options, ILogger<MainContext> logger) : base(options)
-        {
-            _logger = logger;
-        }
-
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
-        //    optionsBuilder
-        //        .EnableDetailedErrors()
-        //        .LogTo((str) => _logger.LogInformation(str));
+        public MainContext(DbContextOptions<MainContext> options) : base(options) { }
 
         public DbSet<Posting> Postings { get; set; }
         public DbSet<User> Users { get; set; }
 
-        // 제품
         public DbSet<Product> Products { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Category> Categories { get; set; }
 
-        // 피드백
-        public DbSet<Like> Likes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Like> Likes { get; set; }
         public DbSet<View> Views { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
