@@ -1,12 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {
-    public class Feedbackable : BaseEntity
+    public class Feedbackable : EntityBase
     {
-        public byte EntityType { get; set; }
-        public int CommentCount { get; set; }
+        [NotMapped]
+        public List<Like> Likes { get; set; }
         public int LikeCount { get; set; }
+
+        [NotMapped]
+        public List<Comment> Comments { get; set; }
+        public int CommentCount { get; set; }
+
+        public int ViewCount { get; set; }
 
         public static FeedbackableType GetEntityType(Feedbackable f)
         {
@@ -27,17 +35,5 @@ namespace ConvAppServer.Models
         Product,
         Comment,
         User
-    }
-
-    interface IHasViewCount
-    {
-        int ViewCount { get; set; }
-    }
-
-    interface IRankable
-    {
-        double MonthlyScore { get; set; }
-        double SeasonalScore { get; set; }
-        double AlltimeScore { get; set; }
     }
 }

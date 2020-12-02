@@ -1,18 +1,20 @@
 ﻿using System.Collections.Generic;
+using ConvAppServer.Models.Interfaces;
 using System.ComponentModel.DataAnnotations.Schema;
+using System;
+using System.Linq;
 
 namespace ConvAppServer.Models
 {
-    public class Posting : Feedbackable, IHasViewCount, IRankable
+    public class Posting : Feedbackable, IRankable, IModifiable
     {
-        public int Id { get; set; }
         public byte PostingType { get; set; }
         public int UserId { get; set; }
+        public DateTime ModifiedDate { get; set; }
 
         public ICollection<Product> Products { get; set; }
         public ICollection<PostingNode> PostingNodes { get; set; }
 
-        public int ViewCount { get; set; }
         public double MonthlyScore { get; set; }
         public double SeasonalScore { get; set; }
         public double AlltimeScore { get; set; }

@@ -1,14 +1,20 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using ConvAppServer.Models.Interfaces;
 
 namespace ConvAppServer.Models
 {
-    public class Comment : Feedbackable
+    public class Comment : Feedbackable, IModifiable
     {
-        public int Id { get; set; }
-        public byte ParentType { get; set; }
-        public int ParentId { get; set; }
-        public int CreatorId { get; set; }
+        public DateTime ModifiedDate { get; set; }
 
+        [Required]
+        public byte ParentType { get; set; }
+        [Required]
+        public int ParentId { get; set; }
+        [Required]
+        public int UserId { get; set; }
         [Column(TypeName = "nvarchar(4000)")]
         public string Text { get; set; }
     }

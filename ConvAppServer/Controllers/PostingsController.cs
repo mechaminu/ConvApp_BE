@@ -29,7 +29,7 @@ namespace ConvAppServer.Controllers
 
             var posting = await _context.Postings
                 .Where(p => p.Id == id)
-                .Include(p => p.PostingNodes)
+                .Include(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .Include(p => p.Products)
                 .AsSplitQuery()
                 .SingleAsync();
@@ -61,8 +61,7 @@ namespace ConvAppServer.Controllers
                 .OrderByDescending(p => p.CreatedDate)
                 .Skip(20 * page)
                 .Take(20)
-                .Include(p => p.PostingNodes
-                    .OrderBy(pn => pn.OrderIndex))
+                .Include(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .Include(p => p.Products)
                 .AsSplitQuery()
                 .ToListAsync();
@@ -92,8 +91,7 @@ namespace ConvAppServer.Controllers
             var postings = await query
                 .Skip(20 * page)
                 .Take(20)
-                .Include(p => p.PostingNodes
-                    .OrderBy(pn => pn.OrderIndex))
+                .Include(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .Include(p => p.Products)
                 .AsSplitQuery()
                 .ToListAsync();
@@ -112,16 +110,6 @@ namespace ConvAppServer.Controllers
             _logger.LogInformation($"received POST request");
             try
             {
-                //byte[] bytes;
-                //using (var ms = new MemoryStream())
-                //{
-                //    using (var reqStream = Request.Body)
-                //        await reqStream.CopyToAsync(ms);
-                //    bytes = ms.ToArray();
-                //}
-                //var json = Encoding.UTF8.GetString(bytes);
-                //var posting = JsonConvert.DeserializeObject<Posting>(json);
-
                 byte cnt = 0;
                 foreach (var node in posting.PostingNodes)
                 {

@@ -1,4 +1,5 @@
 ﻿using ConvAppServer.Models;
+using ConvAppServer.Models.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -13,9 +14,12 @@ namespace ConvAppServer
 
         public DbSet<Posting> Postings { get; set; }
         public DbSet<PostingNode> PostingNodes { get; set; }
+
         public DbSet<User> Users { get; set; }
+        public DbSet<UserAuth> UserAuths { get; set; }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductDetail> ProductDetails { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<Category> Categories { get; set; }
 
@@ -34,24 +38,16 @@ namespace ConvAppServer
                  .HasPrincipalKey(p => p.Id);
 
                 b.HasOne<User>()
-                 .WithMany()
+                 .WithMany(u => u.Postings)
                  .HasForeignKey(p => p.UserId)
                  .HasPrincipalKey(u => u.Id);
-            });
-
-            modelBuilder.Entity<PostingNode>();
-
-            // 피드백 및 코멘트 테이블 정의
-            modelBuilder.Entity<Like>(b =>
-            {
-                b.HasKey(l => new { l.ParentType, l.ParentId, l.CreatorId });
             });
 
             modelBuilder.Entity<Comment>(b =>
             {
                 b.HasOne<User>()
                  .WithMany()
-                 .HasForeignKey(c => c.CreatorId)
+                 .HasForeignKey(c => c.UserId)
                  .HasPrincipalKey(u => u.Id);
             });
 
@@ -67,41 +63,91 @@ namespace ConvAppServer
                  .WithMany()
                  .HasForeignKey(p => p.CategoryId)
                  .HasPrincipalKey(c => c.Id);
+
+                b.HasOne<ProductDetail>()
+                 .WithOne()
+                 .HasForeignKey<ProductDetail>(p => p.ProductId)
+                 .HasPrincipalKey<Product>(p => p.Id);
             });
 
-            // 조회 행위 테이블 정의
+            // 레코드들
+            modelBuilder.Entity<Like>(b =>
+            {
+                b.HasIndex(l => new { l.ParentType, l.ParentId });
+
+                b.HasOne<User>()
+                .WithMany(u => u.Liked)
+                .HasForeignKey(l => l.UserId)
+                .HasPrincipalKey(u => u.Id);
+            });
+
             modelBuilder.Entity<View>(b =>
             {
-                b.HasKey(v => new { v.ParentType, v.ParentId, v.UserId, v.Date });
+                b.HasIndex(v => new { v.ParentType, v.ParentId });
 
                 b.HasOne<User>()
                 .WithMany()
                 .HasForeignKey(v => v.UserId)
                 .HasPrincipalKey(u => u.Id);
             });
+
+            modelBuilder.Entity<User>(b =>
+            {
+                b.HasOne<UserAuth>()
+                 .WithOne()
+                 .HasForeignKey<UserAuth>(ua => ua.UserId)
+                 .HasPrincipalKey<User>(u => u.Id);
+            });
+        }
+
+        public async Task<Feedbackable> GetFeedbackable(FeedbackableType type, int id)
+        {
+            return type switch
+            {
+                FeedbackableType.Posting => await Postings
+                    .Where(p => p.Id == id)
+                    .Include(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
+                    .Include(p => p.Products)
+                    .AsSplitQuery()
+                    .FirstAsync(),
+                FeedbackableType.Product => await Products
+                    .Where(p => p.Id == id)
+                    .Include(p => p.Postings)
+                        .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
+                    .AsSplitQuery()
+                .FirstAsync(),
+                FeedbackableType.Comment => await Comments.FindAsync(id),
+                FeedbackableType.User => await Users
+                    .Where(u => u.Id == id)
+                    .Include(u => u.Postings)
+                        .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
+                    .Include(u => u.Liked)
+                    .SingleAsync(),
+                _ => throw new Exception()
+            };
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker
                 .Entries()
-                .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));
+                .Where(e => e.Entity is EntityBase && (e.State == EntityState.Added || e.State == EntityState.Modified));
 
             foreach (var entityEntry in entries)
             {
-                var elem = entityEntry.Entity as BaseEntity;
+                var elem = entityEntry.Entity as EntityBase;
 
                 if (entityEntry.State == EntityState.Added)
                 {
                     elem.CreatedDate = DateTime.UtcNow;
-                    elem.ModifiedDate = DateTime.UtcNow;
+
+                    if (elem is IModifiable)
+                        (elem as IModifiable).ModifiedDate = DateTime.UtcNow;
 
                     if (elem is Feedbackable)
                     {
                         var elemf = elem as Feedbackable;
-                        elemf.EntityType = (byte)Feedbackable.GetEntityType(elemf);
-                        if (elemf is IHasViewCount)
-                            (elemf as IHasViewCount).ViewCount = 0;
+                        elemf.ViewCount = 0;
                         elemf.CommentCount = 0;
                         elemf.LikeCount = 0;
                     }

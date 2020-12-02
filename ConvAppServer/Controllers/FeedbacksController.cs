@@ -1,11 +1,13 @@
-﻿using ConvAppServer.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ConvAppServer.Models;
+using System.Net;
 
 namespace ConvAppServer.Controllers
 {
@@ -20,12 +22,14 @@ namespace ConvAppServer.Controllers
         {
             _context = context;
             _logger = logger;
+            _logger.LogDebug("FeedbacksController initiated");
         }
 
         [HttpPost("view")]
         public async Task<ActionResult> AddView([FromBody] View view)
         {
-            _logger.LogInformation("Post request for view creation");
+            var sw = new Stopwatch();
+            sw.Start();
 
             var fiveminutebefore = (DateTime.UtcNow).Subtract(TimeSpan.FromMinutes(5));
 
@@ -33,11 +37,17 @@ namespace ConvAppServer.Controllers
                 .Where(v => v.ParentType == view.ParentType)
                 .Where(v => v.ParentId == view.ParentId)
                 .Where(v => v.UserId == view.UserId)
-                .Where(v => v.Date > fiveminutebefore)
+                .Where(v => v.CreatedDate > fiveminutebefore)
                 .AnyAsync();
-            if (recent)
-                return StatusCode(406);
 
+            if (recent)
+            {
+                sw.Stop();
+                _logger.LogInformation($"posting view for {view.ParentType}/{view.ParentId} rejected (recent view exist) - {sw.ElapsedMilliseconds}ms");
+                return StatusCode(406);
+            }
+
+            // 굳이 필요할까? 랭킹낼때 View 다 찾는 로직으로 운영되는데...
             switch (view.ParentType)
             {
                 case (byte)FeedbackableType.Posting:
@@ -47,6 +57,8 @@ namespace ConvAppServer.Controllers
                     (await _context.Products.FindAsync(view.ParentId)).ViewCount++;
                     break;
                 default:
+                    sw.Stop();
+                    _logger.LogError($"posting view for {view.ParentType}/{view.ParentId} failed (invaild ParentType) - {sw.ElapsedMilliseconds}ms");
                     return StatusCode(406);
             }
 
@@ -54,10 +66,12 @@ namespace ConvAppServer.Controllers
             {
                 ParentType = view.ParentType,
                 ParentId = view.ParentId,
-                Date = DateTime.UtcNow,
                 UserId = view.UserId
             });
             await _context.SaveChangesAsync();
+
+            sw.Stop();
+            _logger.LogInformation($"posting view for {view.ParentType}/{view.ParentId} successful - {sw.ElapsedMilliseconds}ms");
             return Ok();
         }
 
@@ -87,63 +101,39 @@ namespace ConvAppServer.Controllers
         [HttpGet("comment")]
         public async Task<ActionResult<List<Comment>>> GetComments([FromQuery] byte type, [FromQuery] int id)
         {
-            var query = _context.Comments
+            var comments = await _context.Comments
                 .Where(c => c.ParentType == type)
                 .Where(c => c.ParentId == id)
-                .OrderBy(c => c.CreatedDate);
-
-            //var total = await query.CountAsync();
-            //var maxPage = Math.Ceiling((double)total / pageSize) - 1;
-
-            //if (page != null)
-            //{
-            //    if (page > maxPage)
-            //        return NoContent();
-
-            //    query = (IOrderedQueryable<Comment>)query.Skip((int)(pageSize * page)).Take(pageSize);
-            //}
-
-            var comments = await query.ToListAsync();
+                .OrderBy(c => c.CreatedDate)
+                .ToListAsync();
 
             return comments;
         }
 
         [HttpPost("comment")]
-        public async Task<ActionResult<List<Comment>>> PostComment([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
+        public async Task<ActionResult> PostComment([FromBody] Comment comment)
         {
-            var cmt = new Comment { ParentType = type, ParentId = id, CreatorId = comment.CreatorId, Text = comment.Text };
-            _context.Comments.Add(cmt);
+            _context.Comments.Add(comment);
+            (await _context.GetFeedbackable((FeedbackableType)comment.ParentType, comment.ParentId)).CommentCount++;
             await _context.SaveChangesAsync();
 
-            // 문제가 없었다면 코멘트수 +1로 이어져야
-            // 여기서 Concurrency issue 발생할 여지가 있어 보이는데...
-
-            //switch (type)
-            //{
-            //    case (byte)FeedbackableType.Posting:
-            //        (await _context.Postings.FindAsync(id)).CommentCount
-
-            //    (byte)FeedbackableType.Product => _context.Products,
-            //    (byte)FeedbackableType.Comment => _context.Comments,
-            //    (byte)FeedbackableType.User => _context.Users,
-            //    _ => throw new Exception()
-            //};
-
-            return CreatedAtAction(nameof(GetComments), new { type, id }, cmt);
+            return Ok();
         }
 
         [HttpDelete("comment")]
-        public async Task<ActionResult<object>> DeleteComment([FromQuery] byte type, [FromQuery] int id, [FromBody] Comment comment)
+        public async Task<ActionResult> DeleteComment([FromQuery] int id)
         {
-            var result = await _context.Comments.FindAsync(type, id, comment.CreatedDate);
+            var result = await _context.Comments.FindAsync(id);
 
             if (result == null)
                 return NotFound();
 
+            (await _context.GetFeedbackable((FeedbackableType)result.ParentType, result.ParentId)).CommentCount--;
+
             _context.Comments.Remove(result);
             await _context.SaveChangesAsync();
 
-            return await GetComments(type, id);
+            return Ok();
         }
 
         [HttpGet("like")]
@@ -154,34 +144,36 @@ namespace ConvAppServer.Controllers
                 .Where(c => c.ParentId == id)
                 .ToListAsync();
 
-            if (likes == null)
-                return NotFound();
-
             return likes;
         }
 
         [HttpPost("like")]
-        public async Task<ActionResult<List<Like>>> PostLike([FromQuery] byte type, [FromQuery] int id, [FromBody] Like like)
+        public async Task<ActionResult> PostLike([FromBody] Like like)
         {
-            var result = new Like { ParentType = type, ParentId = id, CreatorId = like.CreatorId };
-            _context.Likes.Add(result);
+            _context.Likes.Add(like);
+            (await _context.GetFeedbackable((FeedbackableType)like.ParentType, like.ParentId)).LikeCount++;
             await _context.SaveChangesAsync();
 
-            return await GetLikes(type, id);
+            return Ok();
         }
 
         [HttpDelete("like")]
-        public async Task<ActionResult<List<Like>>> DeleteLike([FromQuery] byte type, [FromQuery] int id, [FromBody] Like like)
+        public async Task<ActionResult> DeleteLike([FromBody] Like like)
         {
-            var result = await _context.Likes.FindAsync(type, id, like.CreatorId);
+            var result = await _context.Likes
+                .Where(l => l.ParentType == like.ParentType && l.ParentId == like.ParentId && l.UserId == like.UserId)
+                .SingleAsync();
 
             if (result == null)
                 return NotFound();
 
             _context.Likes.Remove(result);
+            (await _context.GetFeedbackable((FeedbackableType)like.ParentType, like.ParentId)).LikeCount--;
             await _context.SaveChangesAsync();
 
-            return await GetLikes(type, id);
+            return Ok();
         }
+
+
     }
 }

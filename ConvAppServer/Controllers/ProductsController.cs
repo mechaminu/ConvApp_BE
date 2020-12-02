@@ -31,7 +31,7 @@ namespace ConvAppServer.Controllers
                 var product = await _context.Products
                 .Where(p => p.Id == id)
                 .Include(p => p.Postings)
-                    .ThenInclude(p => p.PostingNodes)
+                    .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .AsSplitQuery()
                 .SingleAsync();
 
@@ -52,7 +52,7 @@ namespace ConvAppServer.Controllers
                 .Where(p => (store == null || p.StoreId == store) && (category == null || p.CategoryId == category))
                 .OrderByDescending(p => p.CreatedDate)
                 .Include(p => p.Postings)
-                    .ThenInclude(p => p.PostingNodes)
+                    .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .AsSplitQuery()
                 .ToListAsync();
 
@@ -74,7 +74,7 @@ namespace ConvAppServer.Controllers
                 .OrderByDescending(p => p.AlltimeScore)
                 .ThenByDescending(p => p.CreatedDate)
                 .Include(p => p.Postings)
-                    .ThenInclude(p => p.PostingNodes)
+                    .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .AsSplitQuery()
                 .ToListAsync();
 

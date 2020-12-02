@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ConvAppServer.Models.Interfaces;
 
 namespace ConvAppServer.Models
 {
-    public class Product : Feedbackable, IHasViewCount, IRankable
+    public class Product : Feedbackable, IRankable
     {
-        public int Id { get; set; }
         public int StoreId { get; set; }
         public int CategoryId { get; set; }
 
@@ -19,10 +20,15 @@ namespace ConvAppServer.Models
 
         public ICollection<Posting> Postings { get; set; }
 
-        public int ViewCount { get; set; }
         public double MonthlyScore { get; set; }
         public double SeasonalScore { get; set; }
         public double AlltimeScore { get; set; }
+    }
+
+    public class ProductDetail
+    {
+        [Key]
+        public int ProductId { get; set; }
     }
 
     public class Store

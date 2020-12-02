@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ConvAppServer.Models
+namespace ConvAppServer.Models.Interfaces
 {
-    public class View : Record
+    interface IModifiable
     {
+        DateTime ModifiedDate { get; set; }
     }
 }

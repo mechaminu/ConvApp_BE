@@ -21,6 +21,7 @@ namespace ConvAppServer.Controllers
         {
             _context = context;
             _logger = logger;
+            _logger.LogDebug("UtilitesController created");
         }
 
         [HttpGet("ranking")]
@@ -68,23 +69,22 @@ namespace ConvAppServer.Controllers
                 posting.AlltimeScore = likeCnt * 0.7 + cmtCnt * 0.2 + viewCnt * 0.1;
             }
             sw.Stop();
-            _logger.LogInformation($"Postings score evaluation - {postings.Count} entries - {(double)sw.ElapsedMilliseconds / 1000} sec ({sw.ElapsedMilliseconds / postings.Count}ms per entry)");
+            _logger.LogInformation($"postings ranking score evaluation finished - {sw.ElapsedMilliseconds}ms {sw.ElapsedMilliseconds/postings.Count}msPerEntry");
 
+            sw.Restart();
             var products = await _context.Products
                 .Include(p => p.Postings)
-                .ThenInclude(p => p.PostingNodes)
+                .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                 .ToListAsync();
 
             foreach (var product in products)
             {
                 int recipes = 0;
                 int recipeLikes = 0;
-
                 int reviews = 0;
                 double reviewSum = 0;
 
                 foreach (var posting in product.Postings)
-                {
                     if (posting.PostingType == 1)
                     {
                         recipes++;
@@ -97,7 +97,6 @@ namespace ConvAppServer.Controllers
                         reviews++;
                         reviewSum += double.Parse(posting.PostingNodes.Where(pn => pn.OrderIndex == 0).Single().Text);
                     }
-                }
 
                 var viewCnt = await _context.Views
                     .Where(v => v.ParentType == (byte)FeedbackableType.Product && v.ParentId == product.Id)
@@ -109,6 +108,8 @@ namespace ConvAppServer.Controllers
 
                 product.AlltimeScore = likeCnt * 0.5 + recipeLikes * 0.2 + (reviews + recipes) * 0.2 + viewCnt * 0.1;
             }
+            sw.Stop();
+            _logger.LogInformation($"products ranking score evaluation finished - {sw.ElapsedMilliseconds}ms {sw.ElapsedMilliseconds / products.Count}msPerEntry");
 
             sw.Restart();
             await _context.SaveChangesAsync();
@@ -136,7 +137,6 @@ namespace ConvAppServer.Controllers
             var resultProducts = await _context.Products
                 .Where(p => result1.Contains(p.StoreId) || result2.Contains(p.CategoryId) || EF.Functions.Contains(p.Name, ftsQueryStr) || EF.Functions.FreeText(p.Description, ftsQueryStr))
                 .ToListAsync();
-
             // 포스팅 검색
             var result = await _context.PostingNodes
                 .Where(pn => EF.Functions.FreeText(pn.Text, ftsQueryStr))
@@ -145,14 +145,15 @@ namespace ConvAppServer.Controllers
 
             var resultList = new List<int>();
             foreach (var id in result)
-            {
                 if (!resultList.Contains(id))
                     resultList.Add(id);
-            }
 
             var resultPostings = new List<Posting>();
             foreach (var id in resultList)
-                resultPostings.Add(await _context.Postings.FindAsync(id));
+                resultPostings.Add(await _context.Postings
+                    .Include(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
+                    .Include(p => p.Products)
+                    .SingleAsync(p => p.Id == id));
 
             if (!resultProducts.Any() && !resultPostings.Any())
                 return NotFound();
