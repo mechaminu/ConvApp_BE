@@ -1,9 +1,9 @@
-using System;
-using System.IO;
 using Azure.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System;
+using System.IO;
 
 namespace ConvAppServer
 {
@@ -27,7 +27,7 @@ namespace ConvAppServer
                 {
                     webBuilder
                     .UseKestrel()
-                    .UseUrls("http://*:8080")
+                    .UseUrls("https://*:8080")
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseIISIntegration()
                     .UseStartup<Startup>();

@@ -1,5 +1,4 @@
-﻿using System;
-namespace ConvAppServer.Models
+﻿namespace ConvAppServer.Models
 {
     public class Record : EntityBase
     {

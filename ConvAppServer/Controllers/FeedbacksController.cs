@@ -1,13 +1,12 @@
-﻿using System;
+﻿using ConvAppServer.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using ConvAppServer.Models;
-using System.Net;
 
 namespace ConvAppServer.Controllers
 {
@@ -128,9 +127,23 @@ namespace ConvAppServer.Controllers
             if (result == null)
                 return NotFound();
 
-            (await _context.GetFeedbackable((FeedbackableType)result.ParentType, result.ParentId)).CommentCount--;
+            var likes = await _context.Likes
+                .Where(l => l.ParentType == (byte)FeedbackableType.Comment)
+                .Where(l => l.ParentId == id)
+                .ToListAsync();
 
+            likes.ForEach(l => _context.Likes.Remove(l));
+
+            var cmts = await _context.Comments
+                .Where(l => l.ParentType == (byte)FeedbackableType.Comment)
+                .Where(l => l.ParentId == id)
+                .ToListAsync();
+
+            cmts.ForEach(c => _context.Comments.Remove(c));
+
+            (await _context.GetFeedbackable((FeedbackableType)result.ParentType, result.ParentId)).CommentCount--;
             _context.Comments.Remove(result);
+
             await _context.SaveChangesAsync();
 
             return Ok();

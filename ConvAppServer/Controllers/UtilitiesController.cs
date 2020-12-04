@@ -69,7 +69,7 @@ namespace ConvAppServer.Controllers
                 posting.AlltimeScore = likeCnt * 0.7 + cmtCnt * 0.2 + viewCnt * 0.1;
             }
             sw.Stop();
-            _logger.LogInformation($"postings ranking score evaluation finished - {sw.ElapsedMilliseconds}ms {sw.ElapsedMilliseconds/postings.Count}msPerEntry");
+            _logger.LogInformation($"postings ranking score evaluation finished - {sw.ElapsedMilliseconds}ms {sw.ElapsedMilliseconds / postings.Count}msPerEntry");
 
             sw.Restart();
             var products = await _context.Products

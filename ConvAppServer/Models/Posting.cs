@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using ConvAppServer.Models.Interfaces;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using ConvAppServer.Models.Interfaces;
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ConvAppServer.Models
 {

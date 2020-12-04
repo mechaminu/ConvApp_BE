@@ -115,14 +115,15 @@ namespace ConvAppServer
                     .Include(p => p.Postings)
                         .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                     .AsSplitQuery()
-                .FirstAsync(),
+                    .FirstAsync(),
                 FeedbackableType.Comment => await Comments.FindAsync(id),
                 FeedbackableType.User => await Users
                     .Where(u => u.Id == id)
                     .Include(u => u.Postings)
                         .ThenInclude(p => p.PostingNodes.OrderBy(pn => pn.OrderIndex))
                     .Include(u => u.Liked)
-                    .SingleAsync(),
+                    .AsSplitQuery()
+                    .FirstAsync(),
                 _ => throw new Exception()
             };
         }

@@ -1,7 +1,7 @@
-﻿using System;
+﻿using ConvAppServer.Models.Interfaces;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ConvAppServer.Models.Interfaces;
 
 namespace ConvAppServer.Models
 {

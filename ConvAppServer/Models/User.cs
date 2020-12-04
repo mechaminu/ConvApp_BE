@@ -23,7 +23,7 @@ namespace ConvAppServer.Models
         [NotMapped]
         public List<UserBreif> FollowingUsers { get; set; }
         [NotMapped]
-        public List<UserBreif> FollowerUsers { get;  set; }
+        public List<UserBreif> FollowerUsers { get; set; }
 
         public double MonthlyScore { get; set; }
         public double SeasonalScore { get; set; }
@@ -56,7 +56,7 @@ namespace ConvAppServer.Models
 
         // 비밀번호 찾기는 정확한 비밀번호를 줄 수 없고, 해당 이메일을 바탕으로 비밀번호 재설정 메일을 보내준다.
         // TODO 메일 전송 솔루션 탐색
-        [Column(TypeName = "char(64)")]
-        public string PasswordHash { get; set; }
+        [Column(TypeName = "binary(60)")]
+        public byte[] PasswordHash { get; set; }
     }
 }
