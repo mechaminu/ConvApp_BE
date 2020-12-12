@@ -3,7 +3,7 @@
     public class Record : EntityBase
     {
         public byte ParentType { get; set; }
-        public int ParentId { get; set; }
-        public int UserId { get; set; }
+        public long ParentId { get; set; }
+        public long UserId { get; set; }
     }
 }

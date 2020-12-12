@@ -48,7 +48,7 @@ namespace ConvAppServer.Controllers
                     .Select(c => c.Id)
                     .ToListAsync();
 
-                async Task<int> cmtCntCalc(int id)
+                async Task<int> cmtCntCalc(long id)
                 {
                     var subCmtList = await _context.Comments
                         .Where(_c => _c.ParentType == (byte)FeedbackableType.Comment && _c.ParentId == id)
@@ -143,7 +143,7 @@ namespace ConvAppServer.Controllers
                 .Select(pn => pn.PostingId)
                 .ToArrayAsync();
 
-            var resultList = new List<int>();
+            var resultList = new List<long>();
             foreach (var id in result)
                 if (!resultList.Contains(id))
                     resultList.Add(id);

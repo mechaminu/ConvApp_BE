@@ -98,9 +98,14 @@ namespace ConvAppServer
                  .HasForeignKey<UserAuth>(ua => ua.UserId)
                  .HasPrincipalKey<User>(u => u.Id);
             });
+
+            modelBuilder.Entity<UserAuth>(b =>
+            {
+                b.HasIndex(ua => new { ua.OAuthProvider, ua.OAuthId });
+            });
         }
 
-        public async Task<Feedbackable> GetFeedbackable(FeedbackableType type, int id)
+        public async Task<Feedbackable> GetFeedbackable(FeedbackableType type, long id)
         {
             return type switch
             {

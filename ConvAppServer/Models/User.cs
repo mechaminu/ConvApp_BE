@@ -42,7 +42,7 @@ namespace ConvAppServer.Models
 
     public class UserBreif
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         public string ImageFilename { get; set; }
     }
@@ -50,13 +50,15 @@ namespace ConvAppServer.Models
     public class UserAuth
     {
         [Key]
-        public int UserId { get; set; }
+        public long UserId { get; set; }
+
         [Column(TypeName = "varchar(255)")]
         public string Email { get; set; }
-
-        // 비밀번호 찾기는 정확한 비밀번호를 줄 수 없고, 해당 이메일을 바탕으로 비밀번호 재설정 메일을 보내준다.
-        // TODO 메일 전송 솔루션 탐색
         [Column(TypeName = "binary(60)")]
         public byte[] PasswordHash { get; set; }
+
+        public byte OAuthProvider { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string OAuthId { get; set; }
     }
 }

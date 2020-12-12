@@ -27,7 +27,7 @@ namespace ConvAppServer
                 {
                     webBuilder
                     .UseKestrel()
-                    .UseUrls("https://*:8080")
+                    .UseUrls("http://*:8080")
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseIISIntegration()
                     .UseStartup<Startup>();

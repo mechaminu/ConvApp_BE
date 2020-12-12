@@ -21,7 +21,6 @@ namespace ConvAppServer.Controllers
         {
             _context = context;
             _logger = logger;
-            _logger.LogDebug("FeedbacksController initiated");
         }
 
         [HttpPost("view")]

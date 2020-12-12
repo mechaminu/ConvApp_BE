@@ -8,7 +8,7 @@ namespace ConvAppServer.Models
     public class Posting : Feedbackable, IRankable, IModifiable
     {
         public byte PostingType { get; set; }
-        public int UserId { get; set; }
+        public long UserId { get; set; }
         public DateTime ModifiedDate { get; set; }
 
         public ICollection<Product> Products { get; set; }
@@ -21,8 +21,8 @@ namespace ConvAppServer.Models
 
     public class PostingNode
     {
-        public int Id { get; set; }                 // PK
-        public int PostingId { get; set; }          // FK
+        public long Id { get; set; }                 // PK
+        public long PostingId { get; set; }          // FK
         public byte OrderIndex { get; set; }
 
         [Column(TypeName = "nvarchar(4000)")]

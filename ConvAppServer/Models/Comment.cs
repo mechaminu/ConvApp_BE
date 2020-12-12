@@ -12,9 +12,9 @@ namespace ConvAppServer.Models
         [Required]
         public byte ParentType { get; set; }
         [Required]
-        public int ParentId { get; set; }
+        public long ParentId { get; set; }
         [Required]
-        public int UserId { get; set; }
+        public long UserId { get; set; }
         [Column(TypeName = "nvarchar(4000)")]
         public string Text { get; set; }
     }

@@ -7,8 +7,8 @@ namespace ConvAppServer.Models
 {
     public class Product : Feedbackable, IRankable
     {
-        public int StoreId { get; set; }
-        public int CategoryId { get; set; }
+        public long StoreId { get; set; }
+        public long CategoryId { get; set; }
 
         [Column(TypeName = "nvarchar(100)")]
         public string Name { get; set; }
@@ -16,7 +16,7 @@ namespace ConvAppServer.Models
         public string Description { get; set; }
         [Column(TypeName = "char(16)")]
         public string ImageFilename { get; set; }
-        public int Price { get; set; }  // or decimal for the future USD implementation?
+        public long Price { get; set; }  // or decimal for the future USD implementation?
 
         public ICollection<Posting> Postings { get; set; }
 
@@ -28,12 +28,12 @@ namespace ConvAppServer.Models
     public class ProductDetail
     {
         [Key]
-        public int ProductId { get; set; }
+        public long ProductId { get; set; }
     }
 
     public class Store
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         [Column(TypeName = "nvarchar(100)")]
         public string Name { get; set; }
         [Column(TypeName = "char(16)")]
@@ -42,7 +42,7 @@ namespace ConvAppServer.Models
 
     public class Category
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         [Column(TypeName = "nvarchar(100)")]
         public string Name { get; set; }
         [Column(TypeName = "char(16)")]
