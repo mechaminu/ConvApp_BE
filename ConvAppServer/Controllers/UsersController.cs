@@ -150,7 +150,7 @@ namespace ConvAppServer.Controllers
         [HttpGet("loginoauth")]
         public async Task<ActionResult<object>> LoginOauthAccount([FromQuery] string token, [FromHeader] byte? provider = null)
         {
-
+            _logger.LogInformation($"OAuth login request - {(OAuthProvider)provider}");
             string oauthId;
             string email;
             string image;

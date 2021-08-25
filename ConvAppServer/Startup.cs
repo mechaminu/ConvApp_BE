@@ -21,7 +21,6 @@ namespace ConvAppServer
         {
             services.AddDbContext<MainContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("ConvAppBE-DBConnectionString")));
-            //o.UseSqlServer("Data Source=localhost;Initial Catalog=convapp;Integrated Security=True"));
 
             services.AddAzureClients(o =>
                 o.AddBlobServiceClient(Configuration.GetConnectionString("BlobStorageConnectionString")));
