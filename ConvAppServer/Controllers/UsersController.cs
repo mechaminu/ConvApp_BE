@@ -114,7 +114,7 @@ namespace ConvAppServer.Controllers
             {
                 UserId = user.Id,
                 Email = dto.Email,
-                PasswordHash = (dto.OAuthProvider != (byte)OAuthProvider.None && dto.Password != null) ? EncryptInput(dto.Password) : null,
+                PasswordHash = (dto.OAuthProvider == (byte)OAuthProvider.None && dto.Password != null) ? EncryptInput(dto.Password) : null,
                 OAuthProvider = dto.OAuthProvider,
                 OAuthId=dto.OAuthId 
             });
