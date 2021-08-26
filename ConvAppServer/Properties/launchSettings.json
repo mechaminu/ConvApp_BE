@@ -17,7 +17,9 @@
       "commandName": "IISExpress",
       "launchUrl": "api/products",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "VaultUri": "https://convappserver-vault.vault.azure.net/",
+        "AZURE_USERNAME": "admin@lmw5201gmail.onmicrosoft.com"
       },
       "externalUrlConfiguration": true
     },
@@ -25,7 +27,9 @@
       "commandName": "Project",
       "launchUrl": "api/products",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "VaultUri": "https://convappserver-vault.vault.azure.net/",
+        "AZURE_USERNAME": "admin@lmw5201gmail.onmicrosoft.com"
       }
     }
   }

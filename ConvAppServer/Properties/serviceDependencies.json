@@ -10,7 +10,7 @@
     },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConvAppBE_DBConnectionString"
+      "connectionId": "DBConnectionString"
     }
   }
 }

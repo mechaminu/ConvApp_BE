@@ -18,8 +18,8 @@ namespace ConvAppServer
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    config.AddAzureKeyVault(new Uri(Environment.GetEnvironmentVariable("VaultUri")),
-                                            new DefaultAzureCredential());
+                    var keyVaultEndpoint = new Uri(Environment.GetEnvironmentVariable("VaultUri"));
+                    config.AddAzureKeyVault(keyVaultEndpoint, new DefaultAzureCredential());
                 })
                 .ConfigureWebHost(webBuilder =>
                 {

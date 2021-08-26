@@ -114,13 +114,33 @@ namespace ConvAppServer.Controllers
             {
                 UserId = user.Id,
                 Email = dto.Email,
-                PasswordHash = EncryptInput(dto.Password),
+                PasswordHash = (dto.OAuthProvider != (byte)OAuthProvider.None && dto.Password != null) ? EncryptInput(dto.Password) : null,
                 OAuthProvider = dto.OAuthProvider,
                 OAuthId=dto.OAuthId 
             });
             await _context.SaveChangesAsync();
 
             return user.ToBrief();
+        }
+
+        [HttpPost("updateoauth")]
+        public async Task<ActionResult<UserBreif>> UpdateOAuth([FromBody] RegisterDTO dto)
+        {
+            UserAuth target;
+            try
+            {
+                target = await _context.UserAuths.Where(ua => ua.Email == dto.Email).SingleAsync();
+            }
+            catch
+            {
+                return ValidationProblem("가입정보가 올바르지 않습니다.");
+            }
+
+            target.OAuthProvider = dto.OAuthProvider;
+            target.OAuthId = dto.OAuthId;
+            await _context.SaveChangesAsync();
+
+            return await GetUserBrief((int)target.UserId);
         }
 
         [HttpGet("login")]

@@ -80,7 +80,7 @@ namespace ConvAppServer.Controllers
 
             query = query
                 .Where(p => p.CreatedDate <= time)
-                .OrderByDescending(p => p.AlltimeScore);
+                .OrderByDescending(p => 0.6 * p.LikeCount + 0.3 * p.CommentCount + 0.1 * p.ViewCount);
 
             int maxPage = (int)Math.Floor((double)(await query.CountAsync()) / 20);
 
